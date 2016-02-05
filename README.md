@@ -51,15 +51,15 @@ namespace project{
     *  deconstructeur
     *  méthodes
     *  attributs
-- Utiliser  ```explicit``` quand celx²a est nécessaire et proscrire ```implicit```
-```
-class Object{
-    /* explicit */ Object(int i)
-}
-int k=0;
-Object objet = K; // est correcte tant que 
-                    // le constructeur n'est pas déclaré comme explicit
-``` 
+-Utiliser explicit et proscrire implicit
+    ```
+    class Object{
+        /* explicit */ Object(int i)
+    }
+    int k=0;
+    Object objet = K; // est correcte tant que 
+            // le constructeur n'est pas déclaré comme explicit
+    ``` 
 ###  Constructeur ##
 * __Les 5 constructeurs utiles__
     - Constructeur par défaut: ne prend pas de paramètres, instancie les attributs
@@ -94,7 +94,7 @@ Object objet = K; // est correcte tant que
                 return *this;
             }
             ```
-    - Creer une boucle infinie ```Class( Class other );```
+    - _Bonus:_ Creer une boucle infinie ```Class( Class other );```
 
 Avant C++11, si une classe fille ne définissait pas de constructeur, alors le constructeur appelé lors de la création de l'objet était celui par défaut de la classe mère.En ajoutant dans la classe fille B la ligne ```using A::A;```, c'est __l'héritage de constructeur__. 
 Une autre astuce pour éviter les répétitions est la délégation de constructeur : un constructeur en appelle un autre
@@ -122,9 +122,9 @@ friend bool operator<(const Class& l, const Clas&s r)
 # Function
    - Inliner seulement les petites fonctions (tous les accesseurs par exemple)
    - Un passage par référence en C++ correspond a un passage de pointeur, la variable est modifié, il n'y a pas de copie locale de la variable.
-   - Trailing Return :Permet de trouver le type de la sortie d'une fonction. Voici un exemple avec ```C++11``` et le mot clés ```auto``` : ```template <class T, class U> auto add(T t, U u) -> decltype(t + u);``` versus la version C++98 ```template <class T, class U> decltype(declval<T&>() + declval<U&>()) add(T t, U u);```.
-    - Utiliser au maximum l'attribut const, pour tous les accesseurs, pour toutes les méthodes ne modifiant pas la classe, et dans les parametres si lors d'un passage par référence on est sur de pas modifier la valeur.
-        * L'attribut ```constexpr``` permet de définir de véritables constantes qui seront fixés à la compilation. (const peut être modifié par l'attribut ```mutable```
+   - Trailing Return : Permet de trouver le type de la sortie d'une fonction. Voici un exemple avec ```C++11``` et le mot clés ```auto``` : ```template <class T, class U> auto add(T t, U u) -> decltype(t + u);``` versus la version C++98 ```template <class T, class U> decltype(declval<T&>() + declval<U&>()) add(T t, U u);```.
+    - __Utiliser au maximum l'attribut const, pour tous les accesseurs, pour toutes les méthodes ne modifiant pas la classe, et dans les parametres si lors d'un passage par référence on est sur de pas modifier la valeur__.
+        * L'attribut ```constexpr``` permet de définir de véritables constantes qui seront fixés à la compilation. (const quand à lui peut être modifié par l'attribut ```mutable```)
  
 
 # Dynamic Allocation
@@ -134,11 +134,12 @@ Pour des pointeurs, préféré ```nullptr``` à ```NULL```, pour des integers ut
     ```.
     void f()
     {
-        typedef std::shared_ptr<MyObject> MyObjectPtr; // alias
-        // Pour améliorer la verbosité on peut faire aussi auto T = make_unique<MyObject>(parametree constructeur Myobject);
+        typedef std::shared_ptr<Class> MyObjectPtr; // alias
+        // Pour améliorer la verbosité on peut faire aussi 
+        auto T=make_unique<Class>(parametree constructeur Class);
         MyObjectPtr p1;
         {
-            MyObjectPtr p2(new MyObject());
+            MyObjectPtr p2(new Class());
             p1 = p2; // Copy the pointer.
             // Deux références p1 et p2
         } // p2 est detruit.
@@ -147,16 +148,9 @@ Pour des pointeurs, préféré ```nullptr``` à ```NULL```, pour des integers ut
     ```
 
     * Unique_ptr:
-    Un unique_ptr ne partage pas son pointeur.Il ne peut pas être copié vers un autre unique_ptr, passé par valeur à une fonction, ni utilisé dans un algorithme STL (Standard Template Library) qui nécessite d'effectuer des copies.Un unique_ptr peut uniquement être déplacé. Cela signifie que la propriété de la ressource mémoire est transférée à un autre unique_ptr et que le unique_ptr d'origine ne le possède plus. Cela peut être utile lorsque l'on crée un objet dans une fonction et qu'on veut le passer en retour. Pour de gros objets, il est plus intéréssant d
-    * Caste
-        - Utiliser static_cast<T> plutot que la version C
-        - Utiliser const_cast<T> pour transformer des éléments non constants en éléments constant.
+    Un unique_ptr ne partage pas son pointeur. Il ne peut pas être copié vers un autre unique_ptr, passé par valeur à une fonction, ni utilisé dans un algorithme STL (Standard Template Library) qui nécessite d'effectuer des copies.Un unique_ptr peut uniquement être déplacé. Cela signifie que la propriété de la ressource mémoire est transférée à un autre unique_ptr et que le unique_ptr d'origine ne le possède plus. Cela peut être utile lorsque l'on crée un objet dans une fonction et qu'on veut le passer en retour. Pour de gros objets, il est plus intéréssant d
+
 # STL
-- Pour la majorité des containeurs, l'opérateur [] renvoit une référence sur l'objet contenu.
-    
-    ```
-    
-    ```
 ### Vector
 De tous les structures de données de la STL, __vector est la "meilleure"__ ("By default use vector when you need a container" de Bjarne Stroustrup). 
 - Privilégier les vector et les string aux tableaux et aux pointeurs de char. Evite les erreurs et rend le code plus portable.Dans le mode _release_, l'utilisation d'un vector est presque aussi rapide, et beaucoup plus sur, que celle d'un tableau style C, ne pas s'en priver.Quand la taille est fixe dès le début, il est équivalent d'utiliser un tableau _style C_ ou le tableau de la STL:``` std::array<int, 3> ```. (ajout des méthodes ```fill```,```empty```, et ```at``` qui vérifie les bornes...). Voici un exemple d'utilisation de std::array pour une matrice.
@@ -172,7 +166,7 @@ De tous les structures de données de la STL, __vector est la "meilleure"__ ("By
 > Voici un exemple pour afficher toutes les valeurs d'un vector, en utilisant des __fonctions lambda__
 
 ```
-std::for_each(t.begin(),t.end(),[](int x)
+std::for_each(t.begin(),t.end(),[](int &x)
     {
         std::cout << x<<" ";
     });
@@ -211,32 +205,33 @@ Comme une Map mais les éléments ne sont pas triés en utilisant un comparateur
 ### MultiMap
 
 * Inserer dans une `multimap<int,int>`t avec la fonction `insert(pair<int,int>()).
-Pour récuperer toutes les valeurs d'une clé:
-```
-for(auto range=t.equal_range(0) ; range.first != range.second ;++range.first)
-    {
-        std::cout << range.first->second;
-    }
-// Ici auto représente pair<multimap<int,int>::iterator, multimap<int,int>::iterator>
-```
+* Pour récuperer toutes les valeurs d'une clé:
+    ```
+    for(auto range=t.equal_range(0) ; range.first != range.second ;++range.first)
+        {
+            std::cout << range.first->second;
+        }
+    // Ici auto représente pair<multimap<int,int>::iterator,       multimap<int,int>::iterator>
+   ```
 
-### Tuple : "pair aggrandis"
+### Tuple : _"pair aggrandis"_
 
 * Creer :```auto tuple = make_tuple("hello",0,0.05)```
 * Recuperer un objet : ```get<0>(t)```
 # Template
-Les templates sont un méchanisme de la compilation. 
+Les templates sont des méchanismes qui ont lieu lors de la compilation. 
 
 ### Algorithme
 Sommer tous les éléments d'un vecteur de unique_ptr de classe contenant un uint_32:
 ```
 // 0 car on ajoute aucune valeur
-std::accumulate(t.begin(),t.end(),0,[](int sum,const std::unique_ptr<A>& y)
+std::accumulate(t.begin(),t.end(),0,
+           [](int sum,const std::unique_ptr<A>& y)
                                  {
                                     return sum + y->i_;
                                  });
 ```
-## Template deduction
+## Déduction des templates
    - Cas d'utilisations des références et de l'utilisation des constantes lors de la déduction des templates: ``` template<typename T>```     
         * void f(T param)
             - Dans ce cas tout objet, meme si il est déclaré constant, est copié lors pour la fonction.
@@ -257,17 +252,19 @@ std::accumulate(t.begin(),t.end(),0,[](int sum,const std::unique_ptr<A>& y)
         * void f( T&& param)
             - Si une déduction doit avoir lieu (utilisation de templates) alors param est une _référence universelle_. Cependant lorsque il n'y a pas de déduction éfféctué. Il s'agit d'une r-value. Ainsi __&& peut être ou une référence universelle ou une r-value__.
 
-    - Deviner la sortie. On peut utiliser la notation de C++11 ainsi que les mots clés 
-    ```decltype``` et ```auto``` pour gérér différentes sorties.  
-    
-```
-    template<typename Container,typename Index>
-    auto function(Container& c,Index i)
-    -> decltype(C[i])
-    {
-        return c[i];
-    }
-```
-    - Utilisation des fonctions variadiques, pour passer plusieurs arguments différents.
+    - Utilisation des fonctions variadiques, pour passer plusieurs arguments différents. Voici un exemple pour afficher en sortie plusieurs éléments:
+        ```
+        template<class T>
+        void print(const T& l)
+        {
+            std::cout << l;
+        }
+        template<typename T,typename ...R>
+        void print(const T& l,const R& ...p)
+        {
+            std::cout << l;
+            print(p...);
+        }
+        ```
     
 
