@@ -30,10 +30,9 @@ namespace project{
 
 # Variables et Objets
 - Declarer les variables/objets au plus prêt de leur utilisation  
-- ```std::move``` a utilisé quand l'on veut déplacer un objet
 - Préféré int8_t, int16_t, int32_t et int64_t (ou leur version non signé uint64_t) a short, int, long
 - Eviter les __macros__ autant que possibles (préférer const,inline function...). Utiliser ```#DEFINE``` le plus pret de l'endroit de l'utilisation de la macro, pensez à ```#UNDEF``` juste après.
-
+- Préféré la préincrementation ++i à la postincrémentation, car incrémente la variable et enregistre la variable précédente dans une variable locale avant de la renvoyer. Attention la première valeur n'est pas prise en compte
 ## auto 
 - Préféré ```auto x = 5``` à ```int x =5```.
 - _auto_ comprendra ```auto x={1,2,3,4,5}```; et x sera une  ```std::initializer_list<int>```. Cependant pour la déduction avec des templates, cela est impossible. Pour pouvoir passer a une fonction f({1,2,3}), il faut que f soit de la forme
@@ -43,7 +42,7 @@ namespace project{
     ```
 # Classe
 - Eviter d'appeler des fonctions virtuelles dans le constructeur
-- Faire des initialisation arbitraire des attributs d'un objets
+- Faire des initialisation arbitraires des attributs d'un objets pour éviter des comportements imprédictibles.
 - Ordre dans lequel une classe est rangé (public, protected, private) : 
     *  using declaration
     *  static constant
@@ -93,10 +92,11 @@ namespace project{
                 other.mArray = nullptr; // met a défaut
                 return *this;
             }
+            operator= s'il n'est pas déclaré comme friend ne pourra prendre qu'un seul paramètre
             ```
 
     - _Bonus:_ Creer une boucle infinie ```Class( Class other );```
-* Le compilateur va générer pour nous un constructeur par copie, ou pr assignement. Si l'on veut empecher cela, et ainsi empecher l'assignement entre classe, on déclarera le l'opérateur d'assignement dans le header auquel on assignera le mot clé `= delete`. Ce mot clé peut être utilisé pour interdire l'usage d'un template pour un type défini : `template<>double fonction<double>(const double&) = delete`. 
+* Le compilateur va générer pour nous un constructeur par copie, ou pr assignement. Si l'on veut empêcher cela, et ainsi empêcher l'assignement entre classe, on déclarera le l'opérateur d'assignement dans le header auquel on assignera le mot clé `= delete`. Ce mot clé peut être utilisé pour interdire l'usage d'un template pour un type défini : `template<>double fonction<double>(const double&) = delete`. 
 * La règle de trois indique que si l'on définint un constructeur par copie,un par assignement et un destructeur, il faut définir les trois. Si l'on génère un cpc,alors un constructeur par déplacement ne sera pas généré automatiquement. Il en de même si un destructeur est redéfinit. Pour indiquer au compilateur, qu'il peut générer quand même un constructeur, le mot clé `default` est utilisé.
 
 Avant C++11, si une classe fille ne définissait pas de constructeur, alors le constructeur appelé lors de la création de l'objet était celui par défaut de la classe mère.En ajoutant dans la classe fille B la ligne ```using A::A;```, c'est __l'héritage de constructeur__. 
@@ -105,31 +105,46 @@ Une autre astuce pour éviter les répétitions est la délégation de construct
 Les utiliser que si cela est vraiment utile. _Quelques exemples_:
 * __Flux__:
 ```C++
+// En dehors de la classe, pas dans la classe
 std::ostream& operator<<(std::ostream& os, const T& obj)
 {
-    // write obj to stream
-    return os;
+    return obj.print(os);
+}
+
+// Et dans la classe 
+std::ostream& print(ostream  &os)
+{
+    return os << "" << "";
 }
 ```
 * __Comparaison__:
 ```
 // Mettre cette fonction comme friend car elle a besoin d'acceder a des parametre privés de Class
-
 friend bool operator<(const Class& l, const Clas&s r)
     {
         return std::tie(l.name, l.floor, l.weight)
              < std::tie(r.name, r.floor, r.weight); // compare tous les attributs
     }
+
 ```
 
+### Héritages
+`Base *b = new Derived; `, et `Derived::g(int i=20)` et `virtual Derived::g(int i=10)`. Si j'appelle b->g(), la fonction _récupéra __ les parametres par défaut de la classe mère__ _car le type statique de l'objet est b; et parce que la fonction g est virtuelle dans la classe mère, la fonction appelée se base sur la résolution dynamique donc c'est la méthode deux qui sera appelée.
+* QUE CHOISIR POUR l'HERITAGE:
+    - héritage privée : public+protected accessible. A utilisé en cas de "est implémenté en terme de ". A utililsé avec précaution, par exemple si l'on ne veut override une fonction, si la classe mère est virtuelle, si l'on veut accéder à un élément protégé, ou si la classe mère ne contient que des fonctions.
+    - aggrégation-composition : public accessible. A utilisé en cas de "est implémenté en terme de" ou "contient".  
+    - héritage publique : a utiliser que dans les cas de la substitution de Liskov. 
+
+- L'héritage et la déduction de type:
+Pour pouvoir récuperer des éléments de la classe mère lorque les classes sont templatés, il faut utiliser using Base<T>::valeur; dans toutes les classes filles!
 # Fonction
    - Inliner seulement les petites fonctions (tous les accesseurs par exemple)
    - Un passage par référence en C++ correspond a un passage de pointeur, la variable est modifié, il n'y a pas de copie locale de la variable.
    - Trailing Return : Permet de trouver le type de la sortie d'une fonction. Voici un exemple avec ```C++11``` et le mot clés ```auto``` : ```template <class T, class U> auto add(T t, U u) -> decltype(t + u);``` versus la version C++98 ```template <class T, class U> decltype(declval<T&>() + declval<U&>()) add(T t, U u);```. 
-    - __Utiliser au maximum l'attribut const, pour tous les accesseurs, pour toutes les méthodes ne modifiant pas l'objet qui appelle la méthode (le const se met ç la fin de la déclaration de la fonction, et dans les parametres si lors d'un passage par référence on est sur de pas modifier la valeur__. Le mot clé __decltype__ permet d'extraire le type d'une variable ou d'une expression.
+    - __Utiliser au maximum l'attribut const, pour tous les accesseurs, pour toutes les méthodes ne modifiant pas l'objet qui appelle la méthode (le const se met à la fin de la déclaration de la fonction, et dans les parametres si lors d'un passage par référence on est sur de pas modifier la valeur__. Le mot clé __decltype__ permet d'extraire le type d'une variable ou d'une expression.
 
-        * L'attribut ```constexpr``` permet de définir de véritables constantes qui seront fixés à la compilation. (const quand à lui peut être modifié par l'attribut ```mutable```)
-    - Pour éviter les problèmes d'héritages de méthodes, déclarer une fonction purrement virtuelle avec `=0`,et toute fonction qui overide une méthode de la classe mère par `override` à la fin de la méthode. Ainsi si jamais la fonction n'est pas défini dans la classe mère, le compilateur nous l'indiquera.
+        * L'attribut ```constexpr``` permet de définir de véritables constantes qui seront fixés à la compilation. (const quand à lui peut être modifié par l'attribut ```mutable```) _\TODO à améliorer_
+    - Pour éviter les problèmes d'héritages de méthodes, déclarer une fonction purrement virtuelle avec `= 0`, ainsi la classe devient abstraite. Toute fonction qui override une méthode de la classe mère doit se voir attribué le mot clé `override` à la fin de la méthode. Ainsi si jamais la fonction n'est pas défini dans la classe mère, le compilateur nous l'indiquera.
 
 # Dynamic Allocation
 * Pointeurs
@@ -165,13 +180,21 @@ Pour des pointeurs, préféré ```nullptr``` à ```NULL```, pour des integers ut
 # STL
 ### Vector
 De tous les structures de données de la STL, __vector est la "meilleure"__ ("By default use vector when you need a container" de Bjarne Stroustrup). 
-- Privilégier les vector et les string aux tableaux et aux pointeurs de char. Evite les erreurs et rend le code plus portable.Dans le mode _release_, l'utilisation d'un vector est presque aussi rapide, et beaucoup plus sur, que celle d'un tableau style C, ne pas s'en priver.Quand la taille est fixe dès le début, il est équivalent d'utiliser un tableau _style C_ ou le tableau de la STL:``` std::array<int, 3> ```. (ajout des méthodes ```fill```,```empty```, et ```at``` qui vérifie les bornes...). Voici un exemple d'utilisation de std::array pour une matrice.
+- Privilégier les vecteurs et les strings aux tableaux et aux pointeurs de char. Evite les erreurs et rend le code plus portable.Dans le mode _release_, l'utilisation d'un vector est presque aussi rapide, et beaucoup plus sur, que celle d'un tableau style C, ne pas s'en priver. Quand la taille est fixe dès le début, il est équivalent d'utiliser un tableau _style C_ ou le tableau de la STL:``` std::array<int, 3> ```. Cependant l'utilisation de méthode comme ```fill```,```empty```, et ```at``` est intéressant pour les std::array. Voici un exemple d'utilisation de std::array pour une matrice.
     ```C++
     template <class T, size_t LIGNE, size_t COL>
     using Matrice = std::array<std::array<T, COL>, LIGNE>;
     Matrice<float, 3, 4> mat;
     ```
 - Privilégier ```push_back``` a toutes les autres insertions dans un vector. Eviter les insertions répétés uniques: préférer ```insert(vector.begin(), tableau , tableau + 50) ``` pour ajouter plusieurs valeurs en mêmet temps.
+- Eviter d'appeler end() plusieurs fois, construit un objet a chaque fois, plutot le calculer avant.
+
+- Utiliser l'emplacement plutot que l'insertion (emplace_back()), quand l'objet passé nécessite une conversion. Dans ce cas la l'objet est directement construit dans le conteneur au lieu d'etre construit pui copié. 
+```
+    vector<std::string> vec;
+    vec.emplace_back("hello");
+```
+Si le containeur ne rejetera pas les doublons, et si le type de l'objet a mettre dans le conteneur différe de celui du conteneur, alors utiliser emplace_back est plus rapide. 
 - Pour supprimer __vraiment__ des éléments d'un conteneur, utiliser ```container.erase( remove(container.begin(),container.end(), value ),container.end )```.
 - Privilégier les algorithmes de la STL, qu'une boucle itérant sur les valeurs d'un vector: exemple de la fonction ```foreach()```.
 - Itérer a la recherche d'élements dans un container avec find(if) et count(if) pour des containeurs non triés, et binary_search() pour des élements trié.sp. 
@@ -234,8 +257,6 @@ Comme une Map mais les éléments ne sont pas triés en utilisant un comparateur
 
 * Creer :```auto tuple = make_tuple("hello",0,0.05)```
 * Recuperer un objet : ```get<0>(t)```
-# Template
-Les templates sont des méchanismes qui ont lieu lors de la compilation. 
 
 ### Algorithme
 Sommer tous les éléments d'un vecteur de unique_ptr de classe contenant un uint_32:
@@ -247,6 +268,11 @@ std::accumulate(t.begin(),t.end(),0,
                                     return sum + y->i_;
                                  });
 ```
+
+# Template
+C'est un méchanisme qui a lieu lors de la compilation. 
+
+
 ## Déduction des templates
    - Cas d'utilisations des références et de l'utilisation des constantes lors de la déduction des templates: ``` template<typename T>```     
         * void f(T param)
@@ -266,9 +292,9 @@ std::accumulate(t.begin(),t.end(),0,
         * void f(const T& param);
             - Dans ce cas là, tout parametre est passé par référence et devient const 
         * void f( T&& param)
-            - Si une déduction doit avoir lieu (utilisation de templates) alors param est une _référence universelle_. Cependant lorsque il n'y a pas de déduction éfféctué. Il s'agit d'une r-value. Ainsi __&& peut être ou une référence universelle ou une r-value__.
+            - Si une déduction doit avoir lieu (utilisation de templates) alors param est une _référence universelle_. Cependant lorsque il n'y a pas de déduction éfféctué. Il s'agit d'une r-value. Ainsi __&& peut être ou une référence universelle ou une r-value__. On ne peut pas prendre l'addresse mémoire d'une r-value.
 
-    - __Pour obtenir des informations de déduction de type ou de variable auto__, on peut utiliser typeid(objet).name (deux objet seront différents si ils sont différents. Différence entre pointeur et objet. Cependant il ne détecte pas la différence entre une référence, un objet constant, et une valeur simple). On peut aussi utiliser la fonction `std::is_same<decltype(x),decltype(y)>::value` qui retourne un booleun suivant que x et y ont le même type. Cette fonction différencie référence, constante...
+    - __Pour obtenir des informations de déduction de type ou de variable auto__, on peut utiliser typeid(objet).name. Différencie pointeurs et objets, cependant ne détecte pas la différence entre une référence, un objet constant, et une valeur simple. On peut aussi utiliser la fonction `std::is_same<decltype(x),decltype(y)>::value` qui retourne un booleen suivant que x et y ont le même type. __Cette fonction différencie référence, constante__...
     - Utilisation des fonctions variadiques, pour passer plusieurs arguments différents. Voici un exemple pour afficher en sortie plusieurs éléments:
         ```
         template<class T>
