@@ -348,3 +348,6 @@ Les références universelles ne sont présentes que lorsqu'il y a une déductio
 - Appliquez std::forward()  à des références universelles la dernière fois que vous l'utilisez, et std::move() pour des références de r-value la dernière fois que vous utilisez la référence.
 - Appliquez std::forward pour des références universelles retournés par valeur d'une fonction. Appliquez std::move() pour des références r-value retournés par valeur d'une fonction.
 - Ne jamais appliquez forward ou move pour des objets locaux retournés par valeur. Cela supprime l'optimisation des compilateurs, la RVO. 
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/louishenrifranc/c-style/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
