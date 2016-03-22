@@ -1,7 +1,7 @@
 #  Programme C+++ 
 
 # Header 
-  * Pour chaque fichier .cpp associé un fichier .h.
+  * Pour  chaque fichier .cpp associé un fichier .h.
   * Chaque HEADER doit démarre par un 
 ``` #IFNDEF     FOO_BAR_BAZ_H_``` si le header se trouve dans foo/src/bar/baz.h 
 
