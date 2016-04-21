@@ -138,7 +138,6 @@ friend bool operator<(const Class& l, const Clas&s r)
 - L'héritage et la déduction de type:
 Pour pouvoir récuperer des éléments de la classe mère lorque les classes sont templatés, il faut utiliser using Base<T>::valeur; dans toutes les classes filles!
 # Fonction
-   - Inliner seulement les petites fonctions (tous les accesseurs par exemple)
    - Un passage par référence en C++ correspond a un passage de pointeur, la variable est modifié, il n'y a pas de copie locale de la variable.
    - Trailing Return : Permet de trouver le type de la sortie d'une fonction. Voici un exemple avec ```C++11``` et le mot clés ```auto``` : ```template <class T, class U> auto add(T t, U u) -> decltype(t + u);``` versus la version C++98 ```template <class T, class U> decltype(declval<T&>() + declval<U&>()) add(T t, U u);```. 
     - __Utiliser au maximum l'attribut const, pour tous les accesseurs, pour toutes les méthodes ne modifiant pas l'objet qui appelle la méthode (le const se met à la fin de la déclaration de la fonction, et dans les parametres si lors d'un passage par référence on est sur de pas modifier la valeur__. Le mot clé __decltype__ permet d'extraire le type d'une variable ou d'une expression.
