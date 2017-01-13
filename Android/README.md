@@ -531,13 +531,25 @@ A static receiver listens even if your app is not launched. It mush be defined i
 ```
 
 #### Dynamic receiver
-A dynamic receiver is link to the state of the app, and is created intent receives are __only__ usefull when the app is started (showed?)
+A dynamic receiver is link to the state of the app, and is created intent receives are __only__ usefull when the app is running
 * 1. Create an Intent filter and set which intent should we received
 ```java
 IntentFilter intentFilter = new IntentFilter();
 intentFilter.addAction(Intent.ACTION_POWER_CONNECTED);
 ```
-2. 
+2. Create a ```BroadCastReceiver``` class and override ```onReceive()```
+```java
+class MyBroadCastReceiver extends BroadcastReceiver{
+	public void onReceive(Context context, Intent intent) {
+		String action = intent.getAction();
+		if(action == Intent.ACTION_POWER_CONNECTED) {
+			// do something
+		}
+	}
+}
+```
+3. Because the receiver is only triggered when the app is launched, you need to register ```registerReceiver()``` and unregister ```unregisterReceiver()``` in the ```onCreate()```, ```onDestroy()```... methods
 
-
-
+# Completing the UI
+### Constraint layout
+Dependencies in the build.gradle for the Constraint Layout library ```compile 'com.android.support.constraint:constraint-layout:1.0.0-beta4'```
