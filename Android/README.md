@@ -22,6 +22,15 @@ Typical uses of context:
 ### 2.1: Create a layout
 * Create a LinearLayout and add object.
 * Get the object with the ```findViewbyId(R.id.name_defined_xml)```
+##### Notes on Data Binding
+Instead of using findViewbyId, there is a more straightforward way:  
+* First enable databinding in the gradle file: ```dataBinding.enabled=True```.
+* Surround the xml file of an Activity with the <layout/> tag as the root tag.
+* Then to get every element in the xml, just create a class "NameXmlFile + Binding", and get it with the command:
+```java
+XmlFileNameBinding mBinding = DataBindingUtil.setContentView(this, R.layout.xml_file_name);
+```
+* Then you can bind any value in the xml because they are now private argument of the class created
 ### 2.2: Add a Menu (a button in the ActionBar)
 * Create a menu folder (in the res folder) and in it, an xml file which will be used to represend a Menu item.
 * Override ```onCreateOptionsMenu``` in the main Activity file. It will modify the ActionBar by adding the new button just created.
@@ -552,4 +561,7 @@ class MyBroadCastReceiver extends BroadcastReceiver{
 
 # Completing the UI
 ### Constraint layout
-Dependencies in the build.gradle for the Constraint Layout library ```compile 'com.android.support.constraint:constraint-layout:1.0.0-beta4'```
+Dependencies in the build.gradle for the Constraint Layout library ```compile 'com.android.support.constraint:constraint-layout:1.0.0-beta4'```  
+No particular information about this layout, I used the Designer mode
+### Accessibility
+You make your app accessible for people with disabilities. For example every element in the screen can be represented as a string, which will be pronounced by the Android phone. You just have to set the ```android:contentDescription``` field for every element in the xml.
