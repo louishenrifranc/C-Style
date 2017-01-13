@@ -503,7 +503,41 @@ public static void method(Context context) {
 ```
 2. Then, you need to create a MyJobService class extending JobService:
 ```java
+class MyJobService extends JobService {
+	// override onStartJob(final JobParameters jobParameters) {}
+	// The entry point to your Job. Implementations should offload work to another thread of execution as soon as possible.
+	
+	// override onStopJob(JobParameters jobParameters) {}
+	// Called when the scheduling engine has decided to interrupt the execution of a running job,
+     	// most likely because the runtime constraints associated with the job are no longer satisfied.
+}
+
 ##### Notes
 * To reset all notifications, you can use the method ```NotificationManager.cancelAll()```.
+
+
+### Broadcast Receiver
+A broadcast Receiver is a listener created to catch some intent from the system or other apps, that are used for the App. For example, when a photo is taken
+#### Static receiver
+A static receiver listens even if your app is not launched. It mush be defined in the Manifest
+```xml
+<receiver android:name=".MyBroadcastReceiver">
+	<intent-filter>
+		<action android:name="com.android.camera.NEW_PICTURE" />
+		<action android:name="android.hardware.action.NEW_PICTURE" />
+		<data android:mimeType="image/*" />
+	</intent-filter>
+</receiver>
+```
+
+#### Dynamic receiver
+A dynamic receiver is link to the state of the app, and is created intent receives are __only__ usefull when the app is started (showed?)
+* 1. Create an Intent filter and set which intent should we received
+```java
+IntentFilter intentFilter = new IntentFilter();
+intentFilter.addAction(Intent.ACTION_POWER_CONNECTED);
+```
+2. 
+
 
 
