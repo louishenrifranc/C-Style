@@ -564,4 +564,15 @@ class MyBroadCastReceiver extends BroadcastReceiver{
 Dependencies in the build.gradle for the Constraint Layout library ```compile 'com.android.support.constraint:constraint-layout:1.0.0-beta4'```  
 No particular information about this layout, I used the Designer mode
 ### Accessibility
-You make your app accessible for people with disabilities. For example every element in the screen can be represented as a string, which will be pronounced by the Android phone. You just have to set the ```android:contentDescription``` field for every element in the xml.
+* You make your app accessible for people with disabilities. For example every element in the screen can be represented as a string, which will be pronounced by the Android phone. You just have to set the ```android:contentDescription``` field for every element in the xml.
+* __sp sizes__ are invariant whether the density of the pixel of the device. It also allow visually impared people to increase the size of the text in their Accessibility parameter.
+* Add color in the color folder. Always defines ```android:colorPrimary```, ```android:colorPrimaryDark```, and ```android:colorAccent```.
+### Style and Style inheritance
+
+If different item have the same style, then its better to define a Style in the style.xml file and instead of defining every parameter for every items, just set one: ```style="@style/myStyle"```. Here is a simple Style
+```xml
+<style name="myStyle">
+	<item name="android:textSize">28sp</item>
+</style>
+```
+* Style inheritance: ```<style name="myStyle" parent="mainStyle">```. Then, it is possible to add a new parameter, or even override one from the parent.
