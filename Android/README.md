@@ -593,3 +593,6 @@ Then, it is possible to add a new parameter, or even override one from the paren
 It is a design that respond to different devices.
 * To optimize the layout for different screen density, one way is to define different folder of layout. The main one ```layout``` for classical device, a ```layout-sw600dp``` for device that have their smallest width (no matter of the orientation) greater than 600dp. Not all layout in the classical layout folder need to be redefined in the new folder, only those that are relevant to modify.
 
+
+# Advance course
+* Add a library from github: just use ```compile 'com.github.bumptech.glide:glide:3.7.0'``` for the case of tghe Glide library.
