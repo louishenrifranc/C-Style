@@ -520,6 +520,7 @@ class MyJobService extends JobService {
 	// Called when the scheduling engine has decided to interrupt the execution of a running job,
      	// most likely because the runtime constraints associated with the job are no longer satisfied.
 }
+``` 
 
 ##### Notes
 * To reset all notifications, you can use the method ```NotificationManager.cancelAll()```.
@@ -569,12 +570,15 @@ Different constraint:
 * ![Fixed constraint, you can define a size for the view](https://inducesmile.com/wp-content/uploads/2016/10/dimension1.jpg)
 * ![Similar to wrap_content](https://inducesmile.com/wp-content/uploads/2016/10/dimension3.jpg)
 * ![Similar to match_parent](https://inducesmile.com/wp-content/uploads/2016/10/dimension2.jpg)
+* You can constraint the text between two views. All you have to do is to hover your mouse on the baseline handle of some time and when the handle blinks white then click and drag the line to another baseline ![image](https://inducesmile.com/wp-content/uploads/2016/10/baseline_constraint.jpg).
+#### Guideline
+Guideline is an invisible vertical or horizontal dash-line that can be added to layout. Once it is added in a layout, it is possible to add a constraint to it. The good thing about guideline is that the users of the app will not get to see then or feel like they exist.
+
 ### Accessibility
 * You make your app accessible for people with disabilities. For example every element in the screen can be represented as a string, which will be pronounced by the Android phone. You just have to set the ```android:contentDescription``` field for every element in the xml.
 * __sp sizes__ are invariant whether the density of the pixel of the device. It also allow visually impared people to increase the size of the text in their Accessibility parameter.
 * Add color in the color folder. Always defines ```android:colorPrimary```, ```android:colorPrimaryDark```, and ```android:colorAccent```.
 ### Style and Style inheritance
-
 If different item have the same style, then its better to define a Style in the style.xml file and instead of defining every parameter for every items, just set one: ```style="@style/myStyle"```. Here is a simple Style
 ```xml
 <style name="myStyle">
