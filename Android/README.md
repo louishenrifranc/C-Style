@@ -24,7 +24,7 @@ Typical uses of context:
 * Get the object with the ```findViewbyId(R.id.name_defined_xml)```
 ##### Notes on Data Binding
 Instead of using findViewbyId, there is a more straightforward way:  
-* First enable databinding in the gradle file: ```dataBinding.enabled=True```.
+* First enable databinding in the gradle file: ```dataBinding.enabled=true```.
 * Surround the xml file of an Activity with the <layout/> tag as the root tag.
 * Then to get every element in the xml, just create a class "NameXmlFile + Binding", and get it with the command:
 ```java
@@ -562,7 +562,13 @@ class MyBroadCastReceiver extends BroadcastReceiver{
 # Completing the UI
 ### Constraint layout
 Dependencies in the build.gradle for the Constraint Layout library ```compile 'com.android.support.constraint:constraint-layout:1.0.0-beta4'```  
-No particular information about this layout, I used the Designer mode
+#### Rules about constraint
+* When creating constraint layout, every view must have at least two constraint (one horizontal, one vertical). Constraints are between same plane (vertical hancors and ... vertical hancors)
+* Every constraint handle can be used for one constraint, but you can create many constraint to the same anchor point.
+Different constraint:
+* ![Fixed constraint, you can define a size for the view](https://inducesmile.com/wp-content/uploads/2016/10/dimension1.jpg)
+* ![Similar to wrap_content](https://inducesmile.com/wp-content/uploads/2016/10/dimension3.jpg)
+* ![Similar to match_parent](https://inducesmile.com/wp-content/uploads/2016/10/dimension2.jpg)
 ### Accessibility
 * You make your app accessible for people with disabilities. For example every element in the screen can be represented as a string, which will be pronounced by the Android phone. You just have to set the ```android:contentDescription``` field for every element in the xml.
 * __sp sizes__ are invariant whether the density of the pixel of the device. It also allow visually impared people to increase the size of the text in their Accessibility parameter.
