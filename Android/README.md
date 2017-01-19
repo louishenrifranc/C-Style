@@ -596,3 +596,45 @@ It is a design that respond to different devices.
 
 # Advance course
 * Add a library from github: just use ```compile 'com.github.bumptech.glide:glide:3.7.0'``` for the case of tghe Glide library.
+* Google Cloud Messaging: Library for messaging between a server and an app. There are different way of conversing between the entities.Polling is when the device regularly calls up the server to see if anything has changed. Pushing is when the server calls the device to say something has changed. Polling has a lesser implementation cost, but can end up wasting a lot of bandwidth and networking effort to check in with a server that doesn't change very often.
+
+# Firebase
+### Lien App - Projet Firebase
+* 1. Create a new project in the Android studio
+* 2. Create a new account in Firebase, then a new app. Retrieve a key with the terminal command and the tool keytool findable in the jre/bin folder ```./keytool -exportcert -list -v -alias androiddebugkey -keystore ~/.android/debug.keystore```. 
+* Validate the creation of the application in Firebase, then copy the json file created, in the ```app/``` folder of your application
+* Modify the two build.gradle file:
+```
+\\ in the module:app build.gradle at the root of the file
+apply plugin: 'com.google.gms.google-services'
+\\ in the project build.gradle
+buildscript{
+  dependencies{
+    classpath 'com.google.gms:google-services:3.0.0'
+  }
+}
+```
+
+* Ajouter d'autre dépendances pour supporter Firebase dans le projet ![link](https://firebase.google.com/docs/android/setup).
+
+### Writing in the database
+* During the development, set the permission to write and read to the database to true (in the firebase console)  
+Retrieve an instance of your database using getInstance() and reference the location you want to write to. 
+```java
+FirebaseDatabase mFirebaseDatabase;
+DatabaseReference mDatabaseReference;
+
+mFirebaseDatabase = FirebaseDatabase.getInstance();
+mDatabaseReference = mFirebaseDatabase.getReference().child("whereToSave");
+mDatabaseReference.push().setValue(objectToSend);
+```
+You can save a range of data types to the database this way, including Java objects.  
+When you save an object the responses from any getters will be saved as children of this location (so set every getter). 
+### Reading from the database
+https://firebase.google.com/docs/database/android/start/
+
+### Protect database
+It is possible to set different rules to access the database for different type of data for different type of users'. Some restrictions can be set with ```validate``` to data registering in the database.
+
+### Authentificate in the app: FirebaseUI-auth and Firebase-auth
+Go to firebase, and select option to authentificate first.
