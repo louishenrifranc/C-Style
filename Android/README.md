@@ -183,7 +183,8 @@ Other method exists depending the importance of the log (see the documentation).
 
 When the app started, stoped, or is even put in background, some functions fire and it's easy to override them:
 * onCreate() : always implement this callback. It is called when the system create this Activity
-* onStart()
+* onResume() : called when the app start or is resumed
+* onPause() : used when the app is no longer visible
 
 ### Save Activity state
 Activity state can be destroyed for multiple reasons (pressing back button, calling finish()). If an Activity is destroyed and recreated, all the layout/view are saved using the Bundle instante (Bundle is a mapping from String keys to various Parcelable values, Parcelable is an interface to write and read back class). But __members variable of the Activity are destroyed__ so there must be a way to saved them:
@@ -637,4 +638,36 @@ https://firebase.google.com/docs/database/android/start/
 It is possible to set different rules to access the database for different type of data for different type of users'. Some restrictions can be set with ```validate``` to data registering in the database.
 
 ### Authentificate in the app: FirebaseUI-auth and Firebase-auth
-Go to firebase, and select option to authentificate first.
+* Go to firebase, and select which options will be available to authentificate.  
+* Create two variable ```FirebaseAuth mFirebaseAuth=FirebaseAuth.getInstance()```, and create that code
+```java
+FirebaseAuth.AuthStateListener mFirebaseAuthListener = new Firebase.AuthStateListener() {
+	public void onAuthStateChanged(FirebaseAuth firebaseAuth) {
+		FirebaseUser user = firebaseAuth.getCurrentUser();
+        	if (user != null) {
+            		// User is signed in
+            		Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
+        	} else {
+            		// User is signed out
+            		Log.d(TAG, "onAuthStateChanged:signed_out");
+        	}
+
+	}
+}
+
+public void onPause(){
+	//...
+	mFirebaseAuth.removeAuthStateListener(mFirebaseAuthListener);	
+}
+public void onResume(){
+	// ...
+	mFirebaseAuth.addAuthStateListener(mFirebaseAuthListener);
+}
+```
+
+To fill the code, you may required the documentation at ![](https://github.com/firebase/FirebaseUI-Android/tree/master/auth). 
+
+### Firebase storage
+It allows to save big file such as videos, picture...
+```java
+FirebaseStorage firebaseStorage = FirebaseStorage.getInstance()```
