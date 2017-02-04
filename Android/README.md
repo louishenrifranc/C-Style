@@ -19,6 +19,8 @@ Typical uses of context:
 	getApplicationContext().getContentResolver().query(uri, ...);
 	```
 # Part 2
+### Create a package name
+Here is a simple package name ```com.example.lh.pdfdisplayer```. Then, it can be retrieve in the android.defaultConfig part of the build.gradle. 
 ### 2.1: Create a layout
 * Create a LinearLayout and add object.
 * Get the object with the ```findViewbyId(R.id.name_defined_xml)```
@@ -148,9 +150,9 @@ onActivityResult("CODE_FOR_RETRIEVAL", intResultCode, intent);
 <activity
             android:name=".DetailActivity"
             android:parentActivityName=".MainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
+		    <meta-data
+		        android:name="android.support.PARENT_ACTIVITY"
+		        android:value=".MainActivity" />
 </activity>
 ```
 
@@ -165,6 +167,25 @@ onActivityResult("CODE_FOR_RETRIEVAL", intResultCode, intent);
            <category android:name="android.intent.category.LAUNCHER"/>
         </intent-filter>
 </activity>
+```
+
+```singleTop``` avoid creating a new activity when returning back.
+
+### Sending or getting some data
+Allow the user to retrieve an image in the folder:
+```java
+// ImageButton mPhotoPickerButton
+mPhotoPickerButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("image/jpeg");
+		// (only return data that is local)
+                intent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+                startActivityForResult(Intent.createChooser(intent, "Complete action using"), CODE_INTENT);
+		// implement onActivityResult to retrieve the data
+            }
+        });
 ```
 ##### Notes
 * ```launchMode``` tells whether the MainActivity should be recreated when getting back to the MainActivity or only restore.
@@ -670,4 +691,8 @@ To fill the code, you may required the documentation at ![](https://github.com/f
 ### Firebase storage
 It allows to save big file such as videos, picture...
 ```java
-FirebaseStorage firebaseStorage = FirebaseStorage.getInstance()```
+FirebaseStorage mFirebaseStorage = FirebaseStorage.getInstance()
+// get where to save
+mFirebaseStorage.getReference().child("chat_photos");
+
+```
