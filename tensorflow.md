@@ -156,6 +156,45 @@ embedding.tensor_name = embedding.name # embedding is the tf.Variable()
 embedding.metadata_path = metadata # metadata is a filename
 projector.visualize_embeddings(tf.summary.FileWriter(LOG_DIR), config)
 ```
+# Regularization
+### L2 regularization
+```python
+w = tf.Variable()
+cost = # define your loss
+regularizer = tf.nn.l2_loss(w)
+loss = cost + regularizer
+```
+### Dropout
+```
+hidden_layer_drop = tf.nn.dropout(some_activation_output, keep_prob)
+```
+### Batch normalization
+Batch norm wrapper for two dimensional pre-activation tensor where the mean/variance is calculated over the first axis:
+```
+def batch_norm_wrapper(inputs, is_training, decay = 0.999):
+    scale = tf.Variable(tf.ones([inputs.get_shape()[-1]]))
+    beta = tf.Variable(tf.zeros([inputs.get_shape()[-1]]))
+    pop_mean = tf.Variable(tf.zeros([inputs.get_shape()[-1]]), trainable=False)
+    pop_var = tf.Variable(tf.ones([inputs.get_shape()[-1]]), trainable=False)
+    if is_training:
+        batch_mean, batch_var = tf.nn.moments(inputs,[0])
+        train_mean = tf.assign(pop_mean,
+                               pop_mean * decay + batch_mean * (1 - decay))
+        train_var = tf.assign(pop_var,
+                              pop_var * decay + batch_var * (1 - decay))
+        with tf.control_dependencies([train_mean, train_var]):
+            return tf.nn.batch_normalization(inputs,
+                batch_mean, batch_var, beta, scale, epsilon)
+    else:
+        return tf.nn.batch_normalization(inputs,
+            pop_mean, pop_var, beta, scale, epsilon)
+```
+and then use the wrapper this way:
+```
+y = tf.matmul(x,w)
+bn = batch_norm_wrapper(y, is_training=True)
+```
+
 
 # Preprocessing
 It is possible to load data directly from numpy arrays, however it is best practise to use ```tf.SequenceExample```. It is very verbose, but allows reusability, and really split between the model and the data preprocessing
@@ -341,3 +380,4 @@ states_fw, states_bw = states
 * ```tf.sign(var)``` return -1, 0, or 1 depending the var sign.
 * ```tf.reduce_max(3D_tensor, reduction_indices=2)``` return a 2D tensor, where only the max element in the 3dim is kept.
 * ```tf.unstack(value, axis=0)```: If given an array of shape (A, B, C, D), and an axis=2, it will return a list of |C| tensor of shape (A, B, D).
+* ```tf.nn.moments(x, axes)```: return the mean and variance of the vector in the dimension=axis
