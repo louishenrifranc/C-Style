@@ -186,7 +186,7 @@ with tempfile.NamedTemporaryFile() as fp:
 	writer.close()
 	# check where file is writen with fp.name
 ```
-3. Retrieve file with TFRecordReader in```ex```.
+3. Retrieve file with TFRecordReader in an object named ```ex```.
 4. Define how to parse the data
 ```python
 context_features = {
@@ -203,7 +203,9 @@ context_parsed, sequence_parsed = tf.parse_single_sequence_example(
     context_features=context_features,
     sequence_features=sequence_features
 )
-
+```
+5. Retrieve the data into array
+```
 # get back in array format 
 context = tf.contrib.learn.run_n(context_parsed, n=1, feed_dict=None)
 ```
@@ -212,7 +214,60 @@ context = tf.contrib.learn.run_n(context_parsed, n=1, feed_dict=None)
 ```
 tf.nn.embedding_lookup(embeddings, mat_ids)
 # where embeddings is a tf.Variable()
-
-## RNN, LSTM, and shits
 ```
 
+## RNN, LSTM, and shits
+### Stacking recurrent neural network cells
+1. Create the architecture (example for a GRUCell with dropout between every stacking cell
+```
+from tensorflow.nn.rnn_cell import GRUCell, DropoutWrapper, MultiRNNCell
+
+num_neurons = 200
+num_layers = 3
+dropout = tf.placeholder(tf.float32)
+
+cell = GRUCell(num_neurons)
+cell = DropoutWrapper(cell, output_keep_prob=dropout)
+cell = MultiRNNCell([cell] * num_layers)
+```
+2. Simulate the recurrent network over the time step of the input with ```dynamic_rnn```:
+```
+output, state = tf.nn.dynamic_rnn(cell, some_variable, dtype=tf.float32)
+```
+### Variable sequence length
+Often, passing sentences to RNN, not all of them are of the same length. Tensorflow wants us to pass into a RNN a tensor of shape ```batch_size x sentence_length x embedding_length```.  
+To support this in our RNN, we have to first create an 3D array where for each rows (every batch element), we pad with zeros after reaching the end of the batch element sentence. For example if the length of the first sentence is 10, and ```sentence_length=20```, then all element ```tensor[0,10:, :] = 0``` will be zero padded.  
+1. It is possible to compute the length of every batch element with this function:
+```def length(sequence):
+	```
+	@sequence: 3D tensor of shape (batch_size, sequence_length, embedding_size)
+	```
+	used = tf.sign(tf.reduce_sum(tf.abs(sequence), reduction_indices=2))
+	length = tf.reduce_sum(used, reduction_indics=1)
+	length = tf.cast(length, tf.int32)
+	return length # vector of size (batch_size) containing sentence lengths
+```
+2. Using the length function, we can create our rnn
+```
+from tensorflow.nn.rnn_cell import GRUCell
+
+max_length = 100
+embedding_size = 32
+num_hidden = 120
+
+sequence = tf.placeholder([None, max_length, embedding_size])
+output, state = tf.nn.dynamic_rnn(
+    GRUCell(num_hidden),
+    sequence,
+    dtype=tf.float32,
+    sequence_length=length(sequence),
+)
+```
+
+```
+
+
+
+# Miscellanous
+* ```tf.sign(var)``` return -1, 0, or 1 depending the var sign.
+* ```tf.reduce_max(3D_tensor, reduction_indices=2)``` return a 2D tensor, where only the max element in the 3dim is kept.
