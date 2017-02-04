@@ -97,7 +97,8 @@ def main():
 if __name__ == '__main__':
     main()
 ```
-
+# Checkpoint
+/TODO
 # Tensoarboard
 * Launch a session with ```tensorboard --logdir=""```.
 
@@ -248,6 +249,11 @@ context_parsed, sequence_parsed = tf.parse_single_sequence_example(
 # get back in array format 
 context = tf.contrib.learn.run_n(context_parsed, n=1, feed_dict=None)
 ```
+
+# Computer vision application
+
+
+
 # NLP application
 * Look for embedding in a matrix given an id:
 ```
@@ -303,9 +309,7 @@ Often, passing sentences to RNN, not all of them are of the same length. Tensorf
 To support this in our RNN, we have to first create an 3D array where for each rows (every batch element), we pad with zeros after reaching the end of the batch element sentence. For example if the length of the first sentence is 10, and ```sentence_length=20```, then all element ```tensor[0,10:, :] = 0``` will be zero padded.  
 1. It is possible to compute the length of every batch element with this function:
 ```def length(sequence):
-	```
-	@sequence: 3D tensor of shape (batch_size, sequence_length, embedding_size)
-	```
+	# @sequence: 3D tensor of shape (batch_size, sequence_length, embedding_size)
 	used = tf.sign(tf.reduce_sum(tf.abs(sequence), reduction_indices=2))
 	length = tf.reduce_sum(used, reduction_indics=1)
 	length = tf.cast(length, tf.int32)
@@ -330,8 +334,10 @@ output, state = tf.nn.dynamic_rnn(
 ```
 
 There are two cases, wether we are interested by only the last element outputted, or all output at every timestep. Let's define a function for both of them
+
 #### Case 1: output at each timestep
 __Example__: Compute the cross-entropy for every batch element of different size (we can't use ```reduce_mean()```)
+
 ```
 targets = tf.placeholder([batch_size, sequence_length, output_size])
 # targets is padded with zeros in the same way as sequence has been done
@@ -381,3 +387,6 @@ states_fw, states_bw = states
 * ```tf.reduce_max(3D_tensor, reduction_indices=2)``` return a 2D tensor, where only the max element in the 3dim is kept.
 * ```tf.unstack(value, axis=0)```: If given an array of shape (A, B, C, D), and an axis=2, it will return a list of |C| tensor of shape (A, B, D).
 * ```tf.nn.moments(x, axes)```: return the mean and variance of the vector in the dimension=axis
+* ```tf.nn.xw_plus_b(x, w, b)```: explicit
+
+
