@@ -217,6 +217,31 @@ tf.nn.embedding_lookup(embeddings, mat_ids)
 ```
 
 ## RNN, LSTM, and shits
+### Dynamic or static rnn
+* Just use ```tf.dynamic_rnn```, it uses a ```tf.While``` allowing to dynamically construct the graph, and passing different sentence lengths between batches.
+
+### Set state for LSTM cell stacked
+1. A LSTM cell state contains two tensor (the context, and the hidden state). Let's create a placeholder for both this tensors
+```
+# create a (context tensor, hidden tensor) for every layers
+state_placeholder = tf.placeholder(tf.float32, [num_layers, 2, batch_size, state_size])
+# unpack them
+l = tf.unpack(state_placeholder, axis=0)
+```
+2. Transform them into tuples
+```
+rnn_tuple_state = tuple(
+         [tf.nn.rnn_cell.LSTMStateTuple(l[idx][0],l[idx][1])
+          for idx in range(num_layers)]
+)
+```
+3. Create the dynamic rnn, and passed initialized state
+```
+cell = tf.nn.rnn_cell.LSTMCell(state_size, state_is_tuple=True)
+cell = tf.nn.rnn_cell.MultiRNNCell([cell] * num_layers, state_is_tuple=True)
+
+outputs, state = tf.nn.dynamic_rnn(cell, series_batch_input, initial_state=rnn_tuple_state)
+```
 ### Stacking recurrent neural network cells
 1. Create the architecture (example for a GRUCell with dropout between every stacking cell
 ```
@@ -224,7 +249,7 @@ from tensorflow.nn.rnn_cell import GRUCell, DropoutWrapper, MultiRNNCell
 
 num_neurons = 200
 num_layers = 3
-dropout = tf.placeholder(tf.float32)
+dropout = tf.placeholder(0.1, tf.float32)
 
 cell = GRUCell(num_neurons)
 cell = DropoutWrapper(cell, output_keep_prob=dropout)
@@ -234,7 +259,7 @@ cell = MultiRNNCell([cell] * num_layers)
 ```
 output, state = tf.nn.dynamic_rnn(cell, some_variable, dtype=tf.float32)
 ```
-### Variable sequence length
+### Variable sequence length input
 Often, passing sentences to RNN, not all of them are of the same length. Tensorflow wants us to pass into a RNN a tensor of shape ```batch_size x sentence_length x embedding_length```.  
 To support this in our RNN, we have to first create an 3D array where for each rows (every batch element), we pad with zeros after reaching the end of the batch element sentence. For example if the length of the first sentence is 10, and ```sentence_length=20```, then all element ```tensor[0,10:, :] = 0``` will be zero padded.  
 1. It is possible to compute the length of every batch element with this function:
@@ -262,12 +287,57 @@ output, state = tf.nn.dynamic_rnn(
     dtype=tf.float32,
     sequence_length=length(sequence),
 )
-```
 
 ```
 
+There are two cases, wether we are interested by only the last element outputted, or all output at every timestep. Let's define a function for both of them
+#### Case 1: output at each timestep
+__Example__: Compute the cross-entropy for every batch element of different size (we can't use ```reduce_mean()```)
+```
+targets = tf.placeholder([batch_size, sequence_length, output_size])
+# targets is padded with zeros in the same way as sequence has been done
+def cost(targets):
+	cross_entropy = targets * tf.log(output)
+	cross_entropy = -tf.reduce_sum(cross_entropy, reduction_indices=2)
+	mask = tf.sign(tf.reduce_max(tf.abs(target), reduction_indices=2))
+	cross_entropy *= mask
 
+	# Average over all sequence_length
+	cross_entropy = tf.reduce_sum(cross_entropy, reduction_indices=1)
+	cross_entropy /= tf.reduce_sum(mask, reduction_indices=1)
+	return tf.reduce_mean(cross_entropy)
+```
+
+#### Case 2: output at the last timestep
+__Example__: Get the last output for every batch element:
+```
+def last_relevant(output, length):
+    batch_size = tf.shape(output)[0]
+    max_length = tf.shape(output)[1]
+    out_size = int(output.get_shape()[2])
+    index = tf.range(0, batch_size) * max_length + (length - 1)
+    flat = tf.reshape(output, [-1, out_size])
+    relevant = tf.gather(flat, index)
+    return relevant
+```
+
+### Bidirectionnal Recurrent Neural Network
+Not so different from the standart ```dynamic_rnn```, we just need to pass cell for forward and backward pass, and it will return two outputs, and two states variables.  
+Example:
+```
+cell = tf.nn.rnn_cell.LSTMCell(num_units=hidden_size, state_is_tuple=True)
+ 
+outputs, states  = tf.nn.bidirectional_dynamic_rnn(
+    cell_fw=cell, # same cell for both passes
+    cell_bw=cell,
+    dtype=tf.float64,
+    sequence_length=X_lengths, # didn't mention them in the snippet
+    inputs=X)
+output_fw, output_bw = outputs
+states_fw, states_bw = states
+```
 
 # Miscellanous
 * ```tf.sign(var)``` return -1, 0, or 1 depending the var sign.
 * ```tf.reduce_max(3D_tensor, reduction_indices=2)``` return a 2D tensor, where only the max element in the 3dim is kept.
+* ```tf.unstack(value, axis=0)```: If given an array of shape (A, B, C, D), and an axis=2, it will return a list of |C| tensor of shape (A, B, D).
