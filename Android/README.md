@@ -740,6 +740,49 @@ Properties of a marker:
 * draggable, by setting the property draggable to true.
 * title (name displayed when the user touch it)
 * snippet (text display beneath the title
-* color ```.icon(BitmapDescriptorFactory.defaultMarker((BitmapDescriptorFactory.HUE_AZURE)));```
+* color ```.icon(BitmapDescriptorFactory.defaultMarker((BitmapDescriptorFactory.HUE_AZURE)));```  
+Listener for a marker:
+*  OnMarkerClickListener()  
 
+Information windows can be displayed when clicking a marker. 
+
+#### Realtime tracking
+* Request the last known location:
+1. Add permission: ```  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+```
+2. Create a GoogleAPIClient
+```
+// Create an instance of GoogleAPIClient.
+if (mGoogleApiClient == null) {
+    mGoogleApiClient = new GoogleApiClient.Builder(this)
+        .addConnectionCallbacks(this)
+        .addOnConnectionFailedListener(this)
+        .addApi(LocationServices.API)
+        .build();
+}
+```
+Add a method in the onStart of the Activity
+```
+protected void onStart() {
+    mGoogleApiClient.connect();
+    super.onStart();
+}
+
+protected void onStop() {
+    mGoogleApiClient.disconnect();
+    super.onStop();
+}
+```
+3. Get the last location
+```
+@Override
+    public void onConnected(Bundle connectionHint) {
+        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                mGoogleApiClient);
+        if (mLastLocation != null) {
+            mLatitudeText.setText(String.valueOf(mLastLocation.getLatitude()));
+            mLongitudeText.setText(String.valueOf(mLastLocation.getLongitude()));
+        }
+    }
+```	
 
