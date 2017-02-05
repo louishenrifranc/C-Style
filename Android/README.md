@@ -746,8 +746,8 @@ Listener for a marker:
 
 Information windows can be displayed when clicking a marker. 
 
-#### Realtime tracking
-* Request the last known location:
+
+#### Request the last known location:
 1. Add permission: ```  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 ```
 2. Create a GoogleAPIClient
@@ -786,3 +786,14 @@ protected void onStop() {
     }
 ```	
 
+#### Set up a Location request
+1. ```  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>```
+2. 
+	```
+	protected void createLocationRequest() {
+    LocationRequest mLocationRequest = new LocationRequest();
+    mLocationRequest.setInterval(10000);
+    mLocationRequest.setFastestInterval(5000);
+    mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+	}
+	```
