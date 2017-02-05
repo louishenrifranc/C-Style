@@ -696,3 +696,37 @@ FirebaseStorage mFirebaseStorage = FirebaseStorage.getInstance()
 mFirebaseStorage.getReference().child("chat_photos");
 
 ```
+
+
+### Android Maps
+1. Add a ```Fragment``` object, handling the map, by adding a fragment 
+2. Implement the Activity from OnMapReadyCallback, and used the onMapRedy(GoogleMap) to get an handle of the GoogleMap. 
+* MapFragment is a container for the map to furnish an access to the GoogleMap object.  
+#### Type of maps
+All types of map in Google Map (map are set with ```map.setType(GoogleMap.MAP_TYPE_HYBRID)```:
+* normal 
+* hybrid (satellite picture + roadmap above)
+* satellite only
+It is possible to add indoor map (aeroport...) with the command ```GoogleMap.setIndoorEnabled(false)```.
+#### Initial state of the map
+To set up the initial state of the map, you can use the:
+```
+GoogleMapOptions options = new GoogleMapOptions();
+options.mapType(GoogleMap.MAP_TYPE_SATELLITE)
+    .compassEnabled(false)
+    .rotateGesturesEnabled(false)
+    .tiltGesturesEnabled(false);
+```
+
+It is possible to add padding along the border the map, so that tilling, and finger movement are restrict to work on a smaller area of the map.
+
+#### Events
+It is possible to some event when a user is touching a point on the map. You only need to register a listener ```GoogleMap.setOnMapClickListener(OnMapClickListener)```, which triggered the method ```onMapClick(LatLng)``` with the geographic point pointed by the user. In the same way, it is possible to add a listener for long click(setOnMapLongClickListener).
+
+#### Localisation
+First, you need to add a precision to the Manifest:
+* android.permission.ACCESS_COARSE_LOCATION: precision approximate to a neighborhood
+* android.permission.ACCESS_FINE_LOCATION: gps precision (way more precise). 
+
+
+

@@ -300,6 +300,7 @@ cell = GRUCell(num_neurons)
 cell = DropoutWrapper(cell, output_keep_prob=dropout)
 cell = MultiRNNCell([cell] * num_layers)
 ```
+
 2. Simulate the recurrent network over the time step of the input with ```dynamic_rnn```:
 ```
 output, state = tf.nn.dynamic_rnn(cell, some_variable, dtype=tf.float32)
