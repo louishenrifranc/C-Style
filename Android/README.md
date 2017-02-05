@@ -726,7 +726,20 @@ It is possible to some event when a user is touching a point on the map. You onl
 #### Localisation
 First, you need to add a precision to the Manifest:
 * android.permission.ACCESS_COARSE_LOCATION: precision approximate to a neighborhood
-* android.permission.ACCESS_FINE_LOCATION: gps precision (way more precise). 
+* android.permission.ACCESS_FINE_LOCATION: gps precision (way more precise).   
+Then, you can use a calque to permit the user knows his position: ```mMap.setMyLocationEnabled(true);```. 
 
+#### Marker
+It is possible to add a marker with the command 
+```
+map.addMarker(new MarkerOptions()
+   .position(new LatLng(10, 10))
+   .title("Hello world"));
+```  
+Properties of a marker:
+* draggable, by setting the property draggable to true.
+* title (name displayed when the user touch it)
+* snippet (text display beneath the title
+* color ```.icon(BitmapDescriptorFactory.defaultMarker((BitmapDescriptorFactory.HUE_AZURE)));```
 
 
