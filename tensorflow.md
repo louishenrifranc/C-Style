@@ -321,7 +321,6 @@ To support this in our RNN, we have to first create an 3D array where for each r
     	length = tf.cast(length, tf.int32)
     	return length # vector of size (batch_size) containing sentence lengths
     ```
-
 2. Using the length function, we can create our rnn
     ```
     from tensorflow.nn.rnn_cell import GRUCell
