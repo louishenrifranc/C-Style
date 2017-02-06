@@ -262,6 +262,7 @@ tf.nn.embedding_lookup(embeddings, mat_ids)
 ```
 
 ## RNN, LSTM, and shits
+LSTM works better than RNN to remenber long term dependencies, because in its form, only the forget gate get multiplied over time, and not activation, hence as long as the forget bias _ft_ is close to 1, it backpropagate up to the time t. More than that, you must make sure to init the bias different than 0!
 ### Dynamic or static rnn
 * Just use ```tf.dynamic_rnn```, it uses a ```tf.While``` allowing to dynamically construct the graph, and passing different sentence lengths between batches.
 
