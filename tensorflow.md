@@ -137,26 +137,26 @@ summary_writer.add_summary(summary_str, epoch * nbiters + iter)
 	embedding = tf.Variable(tf.random_normal([nb_embedding, embedding_size]))
 	```
 2. Create a tag for every embedding (first name in the file correspond to name of the first embedding
-```
-LOG_DIR = 'log/'
-metadata = os.path.join(LOG_DIR, 'metadata.tsv')
-with open(metadata, 'w') as metadata_file:
-    for name in whatever_object:
-        metadata_file.write('%s\n' % name)
-```
+    ```
+    LOG_DIR = 'log/'
+    metadata = os.path.join(LOG_DIR, 'metadata.tsv')
+    with open(metadata, 'w') as metadata_file:
+        for name in whatever_object:
+            metadata_file.write('%s\n' % name)
+    ```
 3. Save embedding
-```
-saver = tf.train.Saver([movie_embedding])
-saver.save(sess, os.path.join(LOG_DIR, 'movie_embeddings.ckpt'))
-```
-4. Create a projector for tensorboard
-```
-config = projector.ProjectorConfig()
-embedding = config.embeddings.add()
-embedding.tensor_name = embedding.name # embedding is the tf.Variable()
-embedding.metadata_path = metadata # metadata is a filename
-projector.visualize_embeddings(tf.summary.FileWriter(LOG_DIR), config)
-```
+    ```
+    saver = tf.train.Saver([movie_embedding])
+    saver.save(sess, os.path.join(LOG_DIR, 'movie_embeddings.ckpt'))
+    ```
+4. Create a projector for Tensorboard
+    ```
+    config = projector.ProjectorConfig()
+    embedding = config.embeddings.add()
+    embedding.tensor_name = embedding.name # embedding is the tf.Variable()
+    embedding.metadata_path = metadata # metadata is a filename
+    projector.visualize_embeddings(tf.summary.FileWriter(LOG_DIR), config)
+    ```
 # Regularization
 ### L2 regularization
 ```python
@@ -200,55 +200,55 @@ bn = batch_norm_wrapper(y, is_training=True)
 # Preprocessing
 It is possible to load data directly from numpy arrays, however it is best practise to use ```tf.SequenceExample```. It is very verbose, but allows reusability, and really split between the model and the data preprocessing
 1. Create a function to transform a batch element to a ```SequenceExample```:
-```python
-def make_example(inputs, labels):
-	ex = tf.train.SequenceExample()
-	# Add non-sequential feature
-	seq_len = len(inputs)
-	ex.context.feature["length"].int64_list.value.append(sequence_length)
+    ```python
+    def make_example(inputs, labels):
+    	ex = tf.train.SequenceExample()
+    	# Add non-sequential feature
+    	seq_len = len(inputs)
+    	ex.context.feature["length"].int64_list.value.append(sequence_length)
 
-	# Add sequential feature
-	fl_labels = ex.feature_lists.feature_list["labels"]
-	fl_tokens = ex.feature_lists.feature_list["inputs"]
-	for token, label in zip(inputs, labels):
-		fl_labels.feature.add().int64_list.value.append(label)
-		fl_tokens.feature.add().int64_list.value.append(token)	
-	return ex
-```
+    	# Add sequential feature
+    	fl_labels = ex.feature_lists.feature_list["labels"]
+    	fl_tokens = ex.feature_lists.feature_list["inputs"]
+    	for token, label in zip(inputs, labels):
+    		fl_labels.feature.add().int64_list.value.append(label)
+    		fl_tokens.feature.add().int64_list.value.append(token)
+    	return ex
+    ```
 2. Write all example into TFRecords
-```python
-import tempfile
-with tempfile.NamedTemporaryFile() as fp:
-	writer = tf.python_io.TFRecordWriter(fp.name)
-	for input, label_sequence in zip(all_inputs, all_labels):
-		ex = make_example(input, label_sequence)
-		writer.write(ex.SerializeToString())
-	writer.close()
-	# check where file is writen with fp.name
-```
+    ```python
+    import tempfile
+    with tempfile.NamedTemporaryFile() as fp:
+    	writer = tf.python_io.TFRecordWriter(fp.name)
+    	for input, label_sequence in zip(all_inputs, all_labels):
+    		ex = make_example(input, label_sequence)
+    		writer.write(ex.SerializeToString())
+    	writer.close()
+    	# check where file is writen with fp.name
+    ```
 3. Retrieve file with TFRecordReader in an object named ```ex```.
 4. Define how to parse the data
-```python
-context_features = {
-    "length": tf.FixedLenFeature([], dtype=tf.int64)
-}
+    ```python
+    context_features = {
+        "length": tf.FixedLenFeature([], dtype=tf.int64)
+    }
 
-sequence_features = {
-    "tokens": tf.FixedLenSequenceFeature([], dtype=tf.int64),
-    "labels": tf.FixedLenSequenceFeature([], dtype=tf.int64)
-}
+    sequence_features = {
+        "tokens": tf.FixedLenSequenceFeature([], dtype=tf.int64),
+        "labels": tf.FixedLenSequenceFeature([], dtype=tf.int64)
+    }
 
-context_parsed, sequence_parsed = tf.parse_single_sequence_example(
-    serialized=ex,
-    context_features=context_features,
-    sequence_features=sequence_features
-)
-```
+    context_parsed, sequence_parsed = tf.parse_single_sequence_example(
+        serialized=ex,
+        context_features=context_features,
+        sequence_features=sequence_features
+    )
+    ```
 5. Retrieve the data into array
-```
-# get back in array format 
-context = tf.contrib.learn.run_n(context_parsed, n=1, feed_dict=None)
-```
+    ```
+    # get back in array format
+    context = tf.contrib.learn.run_n(context_parsed, n=1, feed_dict=None)
+    ```
 
 # Computer vision application
 
@@ -268,76 +268,80 @@ LSTM works better than RNN to remenber long term dependencies, because in its fo
 
 ### Set state for LSTM cell stacked
 1. A LSTM cell state contains two tensor (the context, and the hidden state). Let's create a placeholder for both this tensors
-```
-# create a (context tensor, hidden tensor) for every layers
-state_placeholder = tf.placeholder(tf.float32, [num_layers, 2, batch_size, state_size])
-# unpack them
-l = tf.unpack(state_placeholder, axis=0)
-```
+    ```
+    # create a (context tensor, hidden tensor) for every layers
+    state_placeholder = tf.placeholder(tf.float32, [num_layers, 2, batch_size, state_size])
+    # unpack them
+    l = tf.unpack(state_placeholder, axis=0)
+    ```
 2. Transform them into tuples
-```
-rnn_tuple_state = tuple(
-         [tf.nn.rnn_cell.LSTMStateTuple(l[idx][0],l[idx][1])
-          for idx in range(num_layers)]
-)
-```
+    ```
+    rnn_tuple_state = tuple(
+             [tf.nn.rnn_cell.LSTMStateTuple(l[idx][0],l[idx][1])
+              for idx in range(num_layers)]
+    )
+    ```
 3. Create the dynamic rnn, and passed initialized state
-```
-cell = tf.nn.rnn_cell.LSTMCell(state_size, state_is_tuple=True)
-cell = tf.nn.rnn_cell.MultiRNNCell([cell] * num_layers, state_is_tuple=True)
+    ```
+    cell = tf.nn.rnn_cell.LSTMCell(state_size, state_is_tuple=True)
+    cell = tf.nn.rnn_cell.MultiRNNCell([cell] * num_layers, state_is_tuple=True)
 
-outputs, state = tf.nn.dynamic_rnn(cell, series_batch_input, initial_state=rnn_tuple_state)
-```
+    outputs, state = tf.nn.dynamic_rnn(cell, series_batch_input, initial_state=rnn_tuple_state)
+    ```
+
 ### Stacking recurrent neural network cells
 1. Create the architecture (example for a GRUCell with dropout between every stacking cell
-```
-from tensorflow.nn.rnn_cell import GRUCell, DropoutWrapper, MultiRNNCell
+    ```
+    from tensorflow.nn.rnn_cell import GRUCell, DropoutWrapper, MultiRNNCell
 
-num_neurons = 200
-num_layers = 3
-dropout = tf.placeholder(0.1, tf.float32)
+    num_neurons = 200
+    num_layers = 3
+    dropout = tf.placeholder(0.1, tf.float32)
 
-cell = GRUCell(num_neurons)
-cell = DropoutWrapper(cell, output_keep_prob=dropout)
-cell = MultiRNNCell([cell] * num_layers)
-```
+    cell = GRUCell(num_neurons)
+    cell = DropoutWrapper(cell, output_keep_prob=dropout)
+    cell = MultiRNNCell([cell] * num_layers)
+    ```
 
 2. Simulate the recurrent network over the time step of the input with ```dynamic_rnn```:
-```
-output, state = tf.nn.dynamic_rnn(cell, some_variable, dtype=tf.float32)
-```
+    ```
+    output, state = tf.nn.dynamic_rnn(cell, some_variable, dtype=tf.float32)
+    ```
+
 ### Variable sequence length input
 Often, passing sentences to RNN, not all of them are of the same length. Tensorflow wants us to pass into a RNN a tensor of shape ```batch_size x sentence_length x embedding_length```.  
 To support this in our RNN, we have to first create an 3D array where for each rows (every batch element), we pad with zeros after reaching the end of the batch element sentence. For example if the length of the first sentence is 10, and ```sentence_length=20```, then all element ```tensor[0,10:, :] = 0``` will be zero padded.  
 1. It is possible to compute the length of every batch element with this function:
-```def length(sequence):
-	# @sequence: 3D tensor of shape (batch_size, sequence_length, embedding_size)
-	used = tf.sign(tf.reduce_sum(tf.abs(sequence), reduction_indices=2))
-	length = tf.reduce_sum(used, reduction_indics=1)
-	length = tf.cast(length, tf.int32)
-	return length # vector of size (batch_size) containing sentence lengths
-```
+    ```
+    def length(sequence):
+    	# @sequence: 3D tensor of shape (batch_size, sequence_length, embedding_size)
+    	used = tf.sign(tf.reduce_sum(tf.abs(sequence), reduction_indices=2))
+    	length = tf.reduce_sum(used, reduction_indics=1)
+    	length = tf.cast(length, tf.int32)
+    	return length # vector of size (batch_size) containing sentence lengths
+    ```
+
 2. Using the length function, we can create our rnn
-```
-from tensorflow.nn.rnn_cell import GRUCell
+    ```
+    from tensorflow.nn.rnn_cell import GRUCell
 
-max_length = 100
-embedding_size = 32
-num_hidden = 120
+    max_length = 100
+    embedding_size = 32
+    num_hidden = 120
 
-sequence = tf.placeholder([None, max_length, embedding_size])
-output, state = tf.nn.dynamic_rnn(
-    GRUCell(num_hidden),
-    sequence,
-    dtype=tf.float32,
-    sequence_length=length(sequence),
-)
+    sequence = tf.placeholder([None, max_length, embedding_size])
+    output, state = tf.nn.dynamic_rnn(
+        GRUCell(num_hidden),
+        sequence,
+        dtype=tf.float32,
+        sequence_length=length(sequence),
+    )
 
-```
+    ```
 
-There are two cases, wether we are interested by only the last element outputted, or all output at every timestep. Let's define a function for both of them
+There are two cases, whether we are interested by only the last element outputted, or all output at every timestep. Let's define a function for both of them
 
-#### Case 1: output at each timestep
+#### Case 1: output at each timesteps
 __Example__: Compute the cross-entropy for every batch element of different size (we can't use ```reduce_mean()```)
 
 ```
