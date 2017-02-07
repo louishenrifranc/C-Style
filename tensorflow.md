@@ -2,6 +2,43 @@
 * A graph defines the computation. It doesn’t compute anything, it doesn’t hold any values, it just defines the operations that you specified in your code.
 * A session allows to execute graphs or part of graphs. It allocates resources (on one or more machines) for that and holds the actual values of intermediate results and variables.
 
+# Variable
+## Some parameters
+* Setting trainable=False keeps the variable out of the GraphKeys.TRAINABLE_VARIABLES collection in the graph, so we won't try and update it when training. 
+* Setting collections=[] keeps the variable out of the GraphKeys.GLOBAL_VARIABLES collection used for saving and restoring checkpoints.  
+Example: ```input_data = tf.Variable(data_initializer, trainable=False, collections=[])```
+
+## Shared variable
+It is possible to reuse weights, just by setting new variable to older one defined previously. For that, you must be in the same namescope, and look for a variable with the same name. Here is an example:
+```
+def build():
+    # Create variable named "weights".
+    weights = tf.get_variable("weights", kernel_shape,
+        initializer=tf.random_normal_initializer())
+    ...
+
+def build_funct():
+     with tf.variable_scope("scope1"):
+	relu1 = build()
+     with tf.variable_scope("scope2"):
+	# relu2 is different from relu1, even if they shared the same name, they are in different namescope	
+	relu2 = build()
+
+# however calling twice the build_funct() will return an error
+
+
+result1 = build_funct()
+result2 = build_funct()
+# Raises ValueError(... scope1/weights already exists ...) because
+# f.get_variable_scope().reuse == False 
+
+# to avoid the error, you must defined this way:
+with tf.variable_scope("image_filters") as scope:
+	result1 = build_funct()
+	scope.reuse_variables()
+	result2 = build_funct()
+```
+
 # How to structure a Tensorflow model
 ```python
 import functools
@@ -309,18 +346,18 @@ LSTM works better than RNN to remenber long term dependencies, because in its fo
     ```
 
 ### Variable sequence length input
-Often, passing sentences to RNN, not all of them are of the same length. Tensorflow wants us to pass into a RNN a tensor of shape ```batch_size x sentence_length x embedding_length```.  
-To support this in our RNN, we have to first create an 3D array where for each rows (every batch element), we pad with zeros after reaching the end of the batch element sentence. For example if the length of the first sentence is 10, and ```sentence_length=20```, then all element ```tensor[0,10:, :] = 0``` will be zero padded.  
-1. It is possible to compute the length of every batch element with this function:
-    ```
 
-    def length(sequence):
-    	@sequence: 3D tensor of shape (batch_size, sequence_length, embedding_size)
-    	used = tf.sign(tf.reduce_sum(tf.abs(sequence), reduction_indices=2))
-    	length = tf.reduce_sum(used, reduction_indics=1)
-    	length = tf.cast(length, tf.int32)
-    	return length # vector of size (batch_size) containing sentence lengths
-    ```
+Often, passing sentences to RNN, not all of them are of the same length. Tensorflow wants us to pass into a RNN a tensor of shape ```batch_size x sentence_length x embedding_length```.
+To support this in our RNN, we have to first create an 3D array where for each rows (every batch element), we pad with zeros after reaching the end of the batch element sentence. For example if the length of the first sentence is 10, and ```sentence_length=20```, then all element ```tensor[0,10:, :] = 0``` will be zero padded.
+1. It is possible to compute the length of every batch element with this function:
+```
+def length(sequence):
+    @sequence: 3D tensor of shape (batch_size, sequence_length, embedding_size)
+    used = tf.sign(tf.reduce_sum(tf.abs(sequence), reduction_indices=2))
+    length = tf.reduce_sum(used, reduction_indics=1)
+    length = tf.cast(length, tf.int32)
+    return length # vector of size (batch_size) containing sentence lengths
+```
 2. Using the length function, we can create our rnn
     ```
     from tensorflow.nn.rnn_cell import GRUCell
