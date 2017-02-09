@@ -410,7 +410,7 @@ def last_relevant(output, length):
 ```
 
 ### Bidirectionnal Recurrent Neural Network
-Not so different from the standart ```dynamic_rnn```, we just need to pass cell for forward and backward pass, and it will return two outputs, and two states variables.  
+Not so different from the standart ```dynamic_rnn```, we just need to pass cell for forward and backward pass, and it will return two outputs, and two states variables.  d
 Example:
 ```
 cell = tf.nn.rnn_cell.LSTMCell(num_units=hidden_size, state_is_tuple=True)
@@ -431,6 +431,8 @@ states_fw, states_bw = states
 * ```tf.unstack(value, axis=0)```: If given an array of shape (A, B, C, D), and an axis=2, it will return a list of |C| tensor of shape (A, B, D).
 * ```tf.nn.moments(x, axes)```: return the mean and variance of the vector in the dimension=axis
 * ```tf.nn.xw_plus_b(x, w, b)```: explicit
+* tf.global_variables(): return every new variables that are shred across machines in a distributed environment. Each time a Variable() constructor is called, it adds a new variabl ot he graph collection
+* tf.convert_to_tensor(args, dtype): (tf.convert_to_tensor([[1, 2],[2, 3]], dtype=tf.float32)): convert an numpy array, a python list or scalar, to a Tensor.
 
 # Tensorflow fold
 All tensorflow_fold function to treat sequences:
@@ -440,6 +442,4 @@ All tensorflow_fold function to treat sequences:
 * td.Reduce(f): Takes a sequence as input, and reduces it to a single value by applying f to elements pair-wise, essentially executing a binary expression tree with f.
 * td.Zip(): Takes a tuple of sequences as inputs, and produces a sequence of tuples as output.
 * td.Broadcast(a): Takes the output of block a, and turns it into an infinite repeating sequence. Typically used in conjunction with Zip and Map, to process each element of a sequence with a function that uses a.
-* tf.global_variables(): return every new variables that are shred across machines in a distributed environment. Each time a Variable() constructor is called, it adds a new variabl ot he graph collection
-* tf.convert_to_tensor(args, dtype): (tf.convert_to_tensor([[1, 2],[2, 3]], dtype=tf.float32)): convert an numpy array, a python list or scalar, to a Tensor.
 
