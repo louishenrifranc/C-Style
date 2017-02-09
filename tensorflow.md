@@ -432,4 +432,14 @@ states_fw, states_bw = states
 * ```tf.nn.moments(x, axes)```: return the mean and variance of the vector in the dimension=axis
 * ```tf.nn.xw_plus_b(x, w, b)```: explicit
 
+# Tensorflow fold
+All tensorflow_fold function to treat sequences:
+* td.Map(f): Takes a sequence as input, applies block f to every element in the sequence, and produces a sequence as output.
+* td.Fold(f, z): Takes a sequence as input, and performs a left-fold, using the output of block z as the initial element.
+* td.RNN(c): A recurrent neural network, which is a combination of Map and Fold. Takes an initial state and input sequence, uses the rnn-cell c to produce new states and outputs from previous states and inputs, and returns a final state and output sequence.
+* td.Reduce(f): Takes a sequence as input, and reduces it to a single value by applying f to elements pair-wise, essentially executing a binary expression tree with f.
+* td.Zip(): Takes a tuple of sequences as inputs, and produces a sequence of tuples as output.
+* td.Broadcast(a): Takes the output of block a, and turns it into an infinite repeating sequence. Typically used in conjunction with Zip and Map, to process each element of a sequence with a function that uses a.
+* tf.global_variables(): return every new variables that are shred across machines in a distributed environment. Each time a Variable() constructor is called, it adds a new variabl ot he graph collection
+* tf.convert_to_tensor(args, dtype): (tf.convert_to_tensor([[1, 2],[2, 3]], dtype=tf.float32)): convert an numpy array, a python list or scalar, to a Tensor.
 
