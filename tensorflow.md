@@ -433,7 +433,7 @@ states_fw, states_bw = states
 * ```tf.nn.xw_plus_b(x, w, b)```: explicit
 * tf.global_variables(): return every new variables that are shred across machines in a distributed environment. Each time a Variable() constructor is called, it adds a new variabl ot he graph collection
 * tf.convert_to_tensor(args, dtype): (tf.convert_to_tensor([[1, 2],[2, 3]], dtype=tf.float32)): convert an numpy array, a python list or scalar, to a Tensor.
-
+* ```tf.placeholder_with_default(defautl_output, shape)```: One can see a placeholder as an element in the graph that must be fed an output value with the feed dictionnary, however it is possible to define placeholder that take default value.
 # Tensorflow fold
 All tensorflow_fold function to treat sequences:
 * td.Map(f): Takes a sequence as input, applies block f to every element in the sequence, and produces a sequence as output.

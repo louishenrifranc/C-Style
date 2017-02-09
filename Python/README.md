@@ -54,6 +54,19 @@ Any directory with an ```__init__.py__``` file is considered a Python package. A
 ## Object-oriented programming
 Everything is an object in Python. Some people prone to use Python using only stateless functions, because it is a better programming paradigm for concurrency.
 
+# Signature function
+* Passing multiple arguments: It is possible to pass a list of arguments in a function signature by providing the pointer of the list of arguments, example:
+```
+def f(a, b, c):
+	return a+b+c
+
+liste = [1, 2]
+f(*liste, 3) => 6
+```
+* Automatic conversion of type:
+```
+def f(a:int) => a will be automatically converted to an int
+```
 
 ## Decorators
 
