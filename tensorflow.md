@@ -195,6 +195,7 @@ summary_writer.add_summary(summary_str, epoch * nbiters + iter)
     embedding.metadata_path = metadata # metadata is a filename
     projector.visualize_embeddings(tf.summary.FileWriter(LOG_DIR), config)
     ```
+    
 # Regularization
 ### L2 regularization
 ```python
@@ -350,16 +351,16 @@ LSTM works better than RNN to remenber long term dependencies, because in its fo
 
 Often, passing sentences to RNN, not all of them are of the same length. Tensorflow wants us to pass into a RNN a tensor of shape ```batch_size x sentence_length x embedding_length```.
 To support this in our RNN, we have to first create an 3D array where for each rows (every batch element), we pad with zeros after reaching the end of the batch element sentence. For example if the length of the first sentence is 10, and ```sentence_length=20```, then all element ```tensor[0,10:, :] = 0``` will be zero padded.
-1. It is possible to compute the length of every batch element with this function:
-```
-def length(sequence):
-    @sequence: 3D tensor of shape (batch_size, sequence_length, embedding_size)
-    used = tf.sign(tf.reduce_sum(tf.abs(sequence), reduction_indices=2))
-    length = tf.reduce_sum(used, reduction_indics=1)
-    length = tf.cast(length, tf.int32)
-    return length # vector of size (batch_size) containing sentence lengths
-```
-2. Using the length function, we can create our rnn
+1. It is possible to compute the length of every batch element with this function:  
+    ```
+    def length(sequence):
+    	@sequence: 3D tensor of shape (batch_size, sequence_length, embedding_size)
+    	used = tf.sign(tf.reduce_sum(tf.abs(sequence), reduction_indices=2))
+    	length = tf.reduce_sum(used, reduction_indics=1)
+    	length = tf.cast(length, tf.int32)
+    	return length # vector of size (batch_size) containing sentence lengths
+    ```
+2. Using the length function, we can create our rnn  
     ```
     from tensorflow.nn.rnn_cell import GRUCell
 
