@@ -140,6 +140,7 @@ if __name__ == '__main__':
 * Launch a session with ```tensorboard --logdir=""```.
 
 ### Save a graph
+The FileWriter class provides a mechanism to create an event file in a given directory and add summaries and events to it. The class updates is called asynchronously, which means it will never slow down the training loop calling.
 ```python
 sess = tf.Session()
 summary_writer = tf.summary.FileWriter('logs', graph=sess.graph)
@@ -424,6 +425,8 @@ outputs, states  = tf.nn.bidirectional_dynamic_rnn(
 output_fw, output_bw = outputs
 states_fw, states_bw = states
 ```
+# Graphs
+To collect and retrieve vales associated with a graph, it is possible to get them with GraphKeys. For example ```GLOBAL_VARIABLE```, or ```MODEL_VARIABLE```, or ```TRAINABLE_VARIABLE```, ```QUEUE_RUNNERS```, or even more specifically the ```WEIGHTS```, ```BIASES```, or ```ACTIVATIONS```.
 
 # Miscellanous
 * ```tf.sign(var)``` return -1, 0, or 1 depending the var sign.
@@ -434,6 +437,9 @@ states_fw, states_bw = states
 * tf.global_variables(): return every new variables that are shred across machines in a distributed environment. Each time a Variable() constructor is called, it adds a new variabl ot he graph collection
 * tf.convert_to_tensor(args, dtype): (tf.convert_to_tensor([[1, 2],[2, 3]], dtype=tf.float32)): convert an numpy array, a python list or scalar, to a Tensor.
 * ```tf.placeholder_with_default(defautl_output, shape)```: One can see a placeholder as an element in the graph that must be fed an output value with the feed dictionnary, however it is possible to define placeholder that take default value.
+* ```tf.variable_scope(name_or_scope, default_name)```: if name_or_scope is None, then scope.name is default_name.
+* ```tf.get_default_graph().get_operations()```: return all operations in the graph, operations can be filtered by scope then with the python function ```startwith```. It returns a list of tf.ops.Operation
+
 # Tensorflow fold
 All tensorflow_fold function to treat sequences:
 * td.Map(f): Takes a sequence as input, applies block f to every element in the sequence, and produces a sequence as output.
