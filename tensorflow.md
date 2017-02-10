@@ -177,7 +177,7 @@ summary_writer.add_summary(summary_str, epoch * nbiters + iter)
     ```
 
 2. Create a tag for every embedding (first name in the file correspond to name of the first embedding  
-    ```
+    ```	
     LOG_DIR = 'log/'
     metadata = os.path.join(LOG_DIR, 'metadata.tsv')
     with open(metadata, 'w') as metadata_file:
@@ -187,6 +187,7 @@ summary_writer.add_summary(summary_str, epoch * nbiters + iter)
 
 3. Save embedding
     ```    
+    # See more advance tuto on Saver object
     saver = tf.train.Saver([movie_embedding])
     saver.save(sess, os.path.join(LOG_DIR, 'movie_embeddings.ckpt'))
     ```
@@ -200,6 +201,39 @@ summary_writer.add_summary(summary_str, epoch * nbiters + iter)
     projector.visualize_embeddings(tf.summary.FileWriter(LOG_DIR), config)
     ```
     
+# Saver
+## Introduction
+By default, the ```tf.train.Saver()``` handles all variable relative to the default graph. But you can precise which variable to save with their name: ```tf.train.Saver({"var1": var})```. During the session, you call the save object, with a session, and a path: ```saver.save(session, logdir)```.  
+For each call of the save() function, three files are created + a checkpoint.  
+## Load a graph, and session variables
+* You can loaded a graph saved (not in a session) with the command: ```tf.train.import_meta_graph('results/model.ckpt-*.meta')```. Afterwards, a call to ```tf.get_default_graph()``` will return the graph just created.
+* You can loaded variable associated with a Session, in a session, with the command ```saver.restore(sess, 'results/model.ckpt.data-*')```. 
+
+## Files saved
+* The checkpoint file is use in combination of hih level helper	for different time loading saved chkg
+* The meta chkp hold the compressed Protobuf graph of your model and all te metadata associated
+* The chkp file holds the data
+* The events file store everything for visualization
+## Connect graphs
+It is possible to connect multiple graph, for example if you want to connect vgg19 to a new graph, and only trained the last one, here is a simple example:
+```
+vgg_saver = tf.train.import_meta_graph(dir + '/vgg/results/vgg-16.meta')
+vgg_graph = tf.get_default_graph()
+
+# retrieve inputs
+self.x_plh = vgg_graph.get_tensor_by_name('input:0')
+
+# choose the node to connect to 
+output_conv =vgg_graph.get_tensor_by_name('conv1_2:0')
+
+# stop the gradient for fine tuning
+output_conv_sg = tf.stop_gradient(output_conv)
+
+# create your own neural network
+output_conv_shape = output_conv_sg.get_shape().as_list()
+"""..."""
+```
+
 # Regularization
 ### L2 regularization
 ```python
