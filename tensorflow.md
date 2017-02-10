@@ -255,9 +255,9 @@ It is possible to load data directly from numpy arrays, however it is best pract
     		fl_tokens.feature.add().int64_list.value.append(token)
     	return ex
     ```
+
 2. Write all example into TFRecords  
     ```
-
     import tempfile
     with tempfile.NamedTemporaryFile() as fp:
     	writer = tf.python_io.TFRecordWriter(fp.name)
