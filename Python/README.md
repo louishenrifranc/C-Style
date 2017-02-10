@@ -26,7 +26,7 @@ test:
 ```
 
 ##### How to make test file import your packaged module to test it:
-1. Create a file context.py in the tests folder. Insert  ``` sys.path.insert(0, os.path.abspath('..'))```
+1. Create a file context.py in the tests folder. Insert  ``` sys.path.os(insert, 0.path.abspath('..'))```
 2. Within the individual test modules, import the module like so ```{python} from .context import sample```
 
 
@@ -64,6 +64,8 @@ liste = [1, 2]
 f(*liste, 3) => 6
 ```
 * Automatic conversion of type:
+You can add annotation to the function (different from default value created with '='):
+
 ```
 def f(a:int) => a will be automatically converted to an int
 ```
@@ -74,7 +76,7 @@ def annotated(x: int, y: str) -> bool:
     return x < y
 
 # with annotated.__annotations__, we will get
-# {'y': <class 'str'>, 'return': <class 'bool'>, 'x': <class 'int'>}
+#{'y': <class 'str'>, 'return': <class 'bool'>, 'x': <class 'int'>}
 ```
 
 ## Decorators

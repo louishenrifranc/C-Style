@@ -1,6 +1,6 @@
 # Graph and Session
 * A graph defines the computation. It doesn’t compute anything, it doesn’t hold any values, it just defines the operations that you specified in your code.
-* A session allows to execute graphs or part of graphs. It allocates resources (on one or more machines) for that and holds the actual values of intermediate results and variables.
+* A session allows to execute graphs or part of graphs. It allocates resources (on one or more machines) for that and holds the actual values of intermediate results and variables. One can create a session with tf.Session, and be sure to use a context manager, or tf.Session.close(), because all ressources of the session are saved. To run some graph element, you should use the function .run(graph_element, feed_dic), it return values, or list of values, if a list of graph elements was passed.
 
 # Variable
 ## Some parameters
@@ -427,6 +427,7 @@ states_fw, states_bw = states
 ```
 # Graphs
 To collect and retrieve vales associated with a graph, it is possible to get them with GraphKeys. For example ```GLOBAL_VARIABLE```, or ```MODEL_VARIABLE```, or ```TRAINABLE_VARIABLE```, ```QUEUE_RUNNERS```, or even more specifically the ```WEIGHTS```, ```BIASES```, or ```ACTIVATIONS```.
+* You can get the name of all variables that have not been initialized by passing a list of Variable to the function ```tf.report_uninitialized_variables(list_var). It returns a list of names of uninitialized variables
 
 # Miscellanous
 * ```tf.sign(var)``` return -1, 0, or 1 depending the var sign.
