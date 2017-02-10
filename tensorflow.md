@@ -171,22 +171,27 @@ summary_writer.add_summary(summary_str, epoch * nbiters + iter)
 
 ### Plot embeddings
 1. Create an embedding vector (dim: nb_embeddings, embedding_size)
-	```python
-	embedding = tf.Variable(tf.random_normal([nb_embedding, embedding_size]))
-	```
-2. Create a tag for every embedding (first name in the file correspond to name of the first embedding
+    ```python
+    
+    embedding = tf.Variable(tf.random_normal([nb_embedding, embedding_size]))
     ```
+
+2. Create a tag for every embedding (first name in the file correspond to name of the first embedding  
+    ```
+    
     LOG_DIR = 'log/'
     metadata = os.path.join(LOG_DIR, 'metadata.tsv')
     with open(metadata, 'w') as metadata_file:
         for name in whatever_object:
             metadata_file.write('%s\n' % name)
     ```
+
 3. Save embedding
-    ```
+    ```    
     saver = tf.train.Saver([movie_embedding])
     saver.save(sess, os.path.join(LOG_DIR, 'movie_embeddings.ckpt'))
     ```
+
 4. Create a projector for Tensorboard
     ```
     config = projector.ProjectorConfig()
