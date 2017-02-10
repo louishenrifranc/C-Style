@@ -237,8 +237,9 @@ bn = batch_norm_wrapper(y, is_training=True)
 
 
 # Preprocessing
-It is possible to load data directly from numpy arrays, however it is best practise to use ```tf.SequenceExample```. It is very verbose, but allows reusability, and really split between the model and the data preprocessing
-1. Create a function to transform a batch element to a ```SequenceExample```:
+It is possible to load data directly from numpy arrays, however it is best practise to use ```tf.SequenceExample```. It is very verbose, but allows reusability, and really split between the model and the data preprocessing  
+
+1. Create a function to transform a batch element to a ```SequenceExample```:  
     ```python
     def make_example(inputs, labels):
     	ex = tf.train.SequenceExample()
@@ -283,8 +284,8 @@ It is possible to load data directly from numpy arrays, however it is best pract
         sequence_features=sequence_features
     )
     ```
-5. Retrieve the data into array
-    ```
+5. Retrieve the data into array  
+    ```python
     # get back in array format
     context = tf.contrib.learn.run_n(context_parsed, n=1, feed_dict=None)
     ```
@@ -306,8 +307,9 @@ LSTM works better than RNN to remenber long term dependencies, because in its fo
 * Just use ```tf.dynamic_rnn```, it uses a ```tf.While``` allowing to dynamically construct the graph, and passing different sentence lengths between batches.
 
 ### Set state for LSTM cell stacked
-1. A LSTM cell state contains two tensor (the context, and the hidden state). Let's create a placeholder for both this tensors
+1. A LSTM cell state contains two tensor (the context, and the hidden state). Let's create a placeholder for both this tensors  
     ```
+
     # create a (context tensor, hidden tensor) for every layers
     state_placeholder = tf.placeholder(tf.float32, [num_layers, 2, batch_size, state_size])
     # unpack them
