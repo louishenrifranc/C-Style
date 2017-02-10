@@ -170,15 +170,14 @@ summary_writer.add_summary(summary_str, epoch * nbiters + iter)
 ```
 
 ### Plot embeddings
+
 1. Create an embedding vector (dim: nb_embeddings, embedding_size)
     ```python
-    
     embedding = tf.Variable(tf.random_normal([nb_embedding, embedding_size]))
     ```
 
 2. Create a tag for every embedding (first name in the file correspond to name of the first embedding  
-    ```
-    
+    ```    
     LOG_DIR = 'log/'
     metadata = os.path.join(LOG_DIR, 'metadata.tsv')
     with open(metadata, 'w') as metadata_file:
