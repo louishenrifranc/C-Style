@@ -177,7 +177,7 @@ summary_writer.add_summary(summary_str, epoch * nbiters + iter)
     ```
 
 2. Create a tag for every embedding (first name in the file correspond to name of the first embedding  
-    ```    
+    ```
     LOG_DIR = 'log/'
     metadata = os.path.join(LOG_DIR, 'metadata.tsv')
     with open(metadata, 'w') as metadata_file:
