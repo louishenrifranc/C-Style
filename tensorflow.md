@@ -8,6 +8,17 @@
 * Setting collections=[] keeps the variable out of the GraphKeys.GLOBAL_VARIABLES collection used for saving and restoring checkpoints.  
 Example: ```input_data = tf.Variable(data_initializer, trainable=False, collections=[])```
 
+# Dynamic shape vs Static shape
+For getting the dynamic shape, running a session is necessary, because ds = ss where all None are replaced by the session dimension. Example
+```
+var = tf.placeholder(shape=(None, 2), dtype=tf.float32)
+dynamic_shape = tf.shape(var)
+print(var.get_shape().as_list())  # => [None, 2]
+sess = tf.Session()
+sess.run(tf.global_variables_initializer())
+print(sess.run(dynamic_shape, feed_dict={var: [[1, 2], [1, 2]]}))  # => [2 2]
+```
+
 ## Shared variable
 It is possible to reuse weights, just by setting new variable to older one defined previously. For that, you must be in the same namescope, and look for a variable with the same name. Here is an example:
 ```
@@ -353,7 +364,7 @@ LSTM works better than RNN to remenber long term dependencies, because in its fo
     # create a (context tensor, hidden tensor) for every layers
     state_placeholder = tf.placeholder(tf.float32, [num_layers, 2, batch_size, state_size])
     # unpack them
-    l = tf.unpack(state_placeholder, axis=0)
+    l = tf.unstack(state_placeholder, axis=0)
     ```
 2. Transform them into tuples
     ```
@@ -390,7 +401,7 @@ LSTM works better than RNN to remenber long term dependencies, because in its fo
     ```
 
 ### Variable sequence length input
-
+* First of all ```dynamic_rnn()``` return an output vector, which is of size ```max_length_sentence x hidden_vector```. It contains all the hidden state at every timestep. The other return object is a state object. It is the current state of the cell (hence it depends of the cell used, lstm or rnn...).   
 Often, passing sentences to RNN, not all of them are of the same length. Tensorflow wants us to pass into a RNN a tensor of shape ```batch_size x sentence_length x embedding_length```.
 To support this in our RNN, we have to first create an 3D array where for each rows (every batch element), we pad with zeros after reaching the end of the batch element sentence. For example if the length of the first sentence is 10, and ```sentence_length=20```, then all element ```tensor[0,10:, :] = 0``` will be zero padded.  
 
@@ -475,6 +486,22 @@ states_fw, states_bw = states
 To collect and retrieve vales associated with a graph, it is possible to get them with GraphKeys. For example ```GLOBAL_VARIABLE```, or ```MODEL_VARIABLE```, or ```TRAINABLE_VARIABLE```, ```QUEUE_RUNNERS```, or even more specifically the ```WEIGHTS```, ```BIASES```, or ```ACTIVATIONS```.
 * You can get the name of all variables that have not been initialized by passing a list of Variable to the function ```tf.report_uninitialized_variables(list_var). It returns a list of names of uninitialized variables
 
+# Higher order operators
+* tf.map_fn() : apply a function to a list of elements.
+```
+array = (np.array([1, 2]), np.array([2, 3])
+tf.map_fn(lambda x: (x[0] + x[1], x[0] * x[1]), array)
+# => return ((3, 5), (2, 6))
+
+* tf.foldl(): accumulate an apply a function on a sequence.
+```
+array = np.array([1, 3, 4, 3, 2, 4])
+tf.foldl(lambda a, x: a + x, array) => 17
+tf.foldl(lambda a, x: a + x, array, initializer=3) => 20
+tf.foldr(lamnbda a, x: a + x,  array) => -9
+```
+
+
 # Miscellanous
 * ```tf.sign(var)``` return -1, 0, or 1 depending the var sign.
 * ```tf.reduce_max(3D_tensor, reduction_indices=2)``` return a 2D tensor, where only the max element in the 3dim is kept.
@@ -486,7 +513,7 @@ To collect and retrieve vales associated with a graph, it is possible to get the
 * ```tf.placeholder_with_default(defautl_output, shape)```: One can see a placeholder as an element in the graph that must be fed an output value with the feed dictionnary, however it is possible to define placeholder that take default value.
 * ```tf.variable_scope(name_or_scope, default_name)```: if name_or_scope is None, then scope.name is default_name.
 * ```tf.get_default_graph().get_operations()```: return all operations in the graph, operations can be filtered by scope then with the python function ```startwith```. It returns a list of tf.ops.Operation
-
+* ```tf.expand_dims([1, 2], axis=1)``` return a tensor where the axis dimensions is expanded. Here the new shape will be (2) -> (2, 1)
 # Tensorflow fold
 All tensorflow_fold function to treat sequences:
 * td.Map(f): Takes a sequence as input, applies block f to every element in the sequence, and produces a sequence as output.
