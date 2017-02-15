@@ -493,7 +493,7 @@ array = (np.array([1, 2]), np.array([2, 3])
 tf.map_fn(lambda x: (x[0] + x[1], x[0] * x[1]), array)
 # => return ((3, 5), (2, 6))
 
-* tf.foldl(): accumulate an apply a function on a sequence.
+* tf.foldl(): accumulate and apply a function on a sequence.
 ```
 array = np.array([1, 3, 4, 3, 2, 4])
 tf.foldl(lambda a, x: a + x, array) => 17
@@ -501,6 +501,32 @@ tf.foldl(lambda a, x: a + x, array, initializer=3) => 20
 tf.foldr(lamnbda a, x: a + x,  array) => -9
 ```
 
+# Debugging
+It is usefull to be able to monitor the training of a neural network, and add filter for events, such as the apparition of nan or inf number. To do so, clip a tensor filter to the current session  
+```
+from tensorflow.python import debug as tf_debug
+
+sess = tf_debug.LocalCLIDebugWrapperSession(sess)
+sess.add_tensor_filter("has_inf_or_nan", tf_debug.has_inf_or_nan)
+
+# where the filter is defined this way
+def has_inf_or_nan(datum, tensor):
+  return np.any(np.isnan(tensor)) or np.any(np.isinf(tensor))
+```
+
+Then, run the model ```python model.py --debug```. A commmand line will prompt at first sess.run.
+Here is a non exhaustive list of usefull command:
+* Page down\up to move in the page (clicking in the terminal is also available)
+* Print the value of a tensor: ````pt hidden/Relu:0```
+* Print a sub-array ```pt hidden/Relu:0[0:50,:]```
+* Print a sub-array and highlight specific element in a given range ```pt hidden/Relu:0[0:10,:] -r [1,inf]```
+* Navigate to the current index of a tensor being displayed @[10, 0]
+* Search for regex pattern such as /inf or /nan
+* Display information about the node attribute ```ni -a hidden/Relu:0```.
+* Display information about the current run ```run_info or ri```
+* ```help``` command
+* Run a session until a filter catch something ```run -f filter_name``` (Note that the filter name is the filter name passed to add_tensor_filter).
+* Run a session for a number of step: run -t 10
 
 # Miscellanous
 * ```tf.sign(var)``` return -1, 0, or 1 depending the var sign.
@@ -514,6 +540,8 @@ tf.foldr(lamnbda a, x: a + x,  array) => -9
 * ```tf.variable_scope(name_or_scope, default_name)```: if name_or_scope is None, then scope.name is default_name.
 * ```tf.get_default_graph().get_operations()```: return all operations in the graph, operations can be filtered by scope then with the python function ```startwith```. It returns a list of tf.ops.Operation
 * ```tf.expand_dims([1, 2], axis=1)``` return a tensor where the axis dimensions is expanded. Here the new shape will be (2) -> (2, 1)
+* FLAGS is an internal mecanism that allowed the same functionnality as argparse
+
 # Tensorflow fold
 All tensorflow_fold function to treat sequences:
 * td.Map(f): Takes a sequence as input, applies block f to every element in the sequence, and produces a sequence as output.
