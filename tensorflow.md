@@ -492,7 +492,7 @@ To collect and retrieve vales associated with a graph, it is possible to get the
 array = (np.array([1, 2]), np.array([2, 3])
 tf.map_fn(lambda x: (x[0] + x[1], x[0] * x[1]), array)
 # => return ((3, 5), (2, 6))
-
+```
 * tf.foldl(): accumulate and apply a function on a sequence.
 ```
 array = np.array([1, 3, 4, 3, 2, 4])
