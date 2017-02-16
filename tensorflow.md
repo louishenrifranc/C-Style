@@ -512,7 +512,23 @@ tf.foldl(lambda a, x: a + x, array) => 17
 tf.foldl(lambda a, x: a + x, array, initializer=3) => 20
 tf.foldr(lamnbda a, x: a + x,  array) => -9
 ```
+* tf.scan(): 
+```
+tf.scan(loop_element, range_element: function(), elems = all_elems_to_iterate_over,
+						 initializer=  initializer
+# function() should return a tensor of shape initializer
+# loop_element is of shape initializer
+# range_element is iterate over and is not always necessary (ex: np.arange(10))
+# scan return a vector of all vector of shape initializer
+```
 
+* tf.while_loop(condition, body, init)
+```
+init = (i, (j,k))
+condition = lambda i, _: i<10
+body = lambda i, jk: return (i+1, (jk[0] - jk[1], jk[0] + jk[1]))
+(i_final, jk_final) = tf.while_loop(condition, body, init)
+```
 # Debugging
 It is usefull to be able to monitor the training of a neural network, and add filter for events, such as the apparition of nan or inf number. To do so, clip a tensor filter to the current session  
 ```
