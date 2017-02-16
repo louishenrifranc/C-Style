@@ -157,10 +157,22 @@ sess = tf.Session()
 summary_writer = tf.summary.FileWriter('logs', graph=sess.graph)
 ```
 Connection between them is done with the line: ```with tf.Session(graph=graph) as sess:```
-### Summary about a data
+### Summary about activation and gradient
 ```
-w_h = tf.summary.histogram("weights", W)
+def add_activation_summary(var):
+    tf.summary.histogram(var.op.name + "/activation", var)
+    tf.summary.scalar(var.op.name + "/sparsity", tf.nn.zero_fraction(var))
+
+
+def add_gradient_summary(grad, var):
+    if grad is not None:
+        tf.summary.histogram(var.op.name + "/gradient", grad)
 ```
+
+### Summary about an image
+Automatic rescaling of float value to value between [0, 255]  
+```
+tf.summary.image([batch_size, height, width, channels], max_output= num_max_of_images_to_display)```
 
 ### Summary about a cost function
 ```
@@ -177,7 +189,7 @@ merged_summary_op = tf.summary.merge_all()
 ### Collect stat during each iteration
 ```python
 summary_str, _ = sess.run([merged_summary_op, optimize], {x: batchX, y: batchY})
-summary_writer.add_summary(summary_str, epoch * nbiters + iter)
+summary_writer.add_summary(summary_str, current_iter (must be unique id))
 ```
 
 ### Plot embeddings
@@ -282,8 +294,8 @@ and then use the wrapper this way:
 ```
 y = tf.matmul(x,w)
 bn = batch_norm_wrapper(y, is_training=True)
-```
-
+```  
+The trainable boolean can be a placeholder, so that depending on the feeding dictionnary, the computation in the batch norm layer will be different
 
 # Preprocessing
 It is possible to load data directly from numpy arrays, however it is best practise to use ```tf.SequenceExample```. It is very verbose, but allows reusability, and really split between the model and the data preprocessing  
@@ -541,6 +553,22 @@ Here is a non exhaustive list of usefull command:
 * ```tf.get_default_graph().get_operations()```: return all operations in the graph, operations can be filtered by scope then with the python function ```startwith```. It returns a list of tf.ops.Operation
 * ```tf.expand_dims([1, 2], axis=1)``` return a tensor where the axis dimensions is expanded. Here the new shape will be (2) -> (2, 1)
 * FLAGS is an internal mecanism that allowed the same functionnality as argparse
+* ```clip_discriminator_var_op = [var.assign(tf.clip_by_value(var, clip_value_min, clip_value_max)) for
+                                         var in list_tf_variables]``` create an operator to run in a sess that will clip values.
+### Split training between multiple neural networks
+Imagine two neural networks, created in two different scopes, one in "generator" scope, and one in "discriminator" scope.  
+1. First you need to retrieve all trainable variable with ```train_variables = tf.train_variables()```
+2. Then you split the training variable in two lists:
+	```
+        list_gen = self.generator_variables = [v for v in train_variables if v.name.startswith("generator")]
+	list_dis = self.discriminator_variables = [v for v in train_variables if v.name.startswith("discriminator")]	
+	```
+3. Create two functions for training them: 
+	```
+	grads = optimizer.compute_gradients(loss_generator, var_list=list_gen)
+	train_gen = optimizer.apply_gradients(grads)
+	```
+
 
 # Tensorflow fold
 All tensorflow_fold function to treat sequences:
