@@ -555,6 +555,7 @@ Here is a non exhaustive list of usefull command:
 * FLAGS is an internal mecanism that allowed the same functionnality as argparse
 * ```clip_discriminator_var_op = [var.assign(tf.clip_by_value(var, clip_value_min, clip_value_max)) for
                                          var in list_tf_variables]``` create an operator to run in a sess that will clip values.
+
 ### Split training between multiple neural networks
 Imagine two neural networks, created in two different scopes, one in "generator" scope, and one in "discriminator" scope.  
 1. First you need to retrieve all trainable variable with ```train_variables = tf.train_variables()```
