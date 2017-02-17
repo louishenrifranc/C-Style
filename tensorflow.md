@@ -270,31 +270,19 @@ loss = cost + regularizer
 hidden_layer_drop = tf.nn.dropout(some_activation_output, keep_prob)
 ```
 ### Batch normalization
-Batch norm wrapper for two dimensional pre-activation tensor where the mean/variance is calculated over the first axis:
+Use the tf.nn.contrib.layers.batch_norm
 ```
-def batch_norm_wrapper(inputs, is_training, decay = 0.999):
-    scale = tf.Variable(tf.ones([inputs.get_shape()[-1]]))
-    beta = tf.Variable(tf.zeros([inputs.get_shape()[-1]]))
-    pop_mean = tf.Variable(tf.zeros([inputs.get_shape()[-1]]), trainable=False)
-    pop_var = tf.Variable(tf.ones([inputs.get_shape()[-1]]), trainable=False)
-    if is_training:
-        batch_mean, batch_var = tf.nn.moments(inputs,[0])
-        train_mean = tf.assign(pop_mean,
-                               pop_mean * decay + batch_mean * (1 - decay))
-        train_var = tf.assign(pop_var,
-                              pop_var * decay + batch_var * (1 - decay))
-        with tf.control_dependencies([train_mean, train_var]):
-            return tf.nn.batch_normalization(inputs,
-                batch_mean, batch_var, beta, scale, epsilon)
-    else:
-        return tf.nn.batch_normalization(inputs,
-            pop_mean, pop_var, beta, scale, epsilon)
-```
-and then use the wrapper this way:
-```
-y = tf.matmul(x,w)
-bn = batch_norm_wrapper(y, is_training=True)
+is_training = tf.placeholder(tf.bool)
+batch_norm(pre_activation, is_training=is_training, scale=True)
 ```  
+By default, movingmean, and movingscale are not in the default graph, but in _updateOperation, hence to compute the movingmean, and movingscale, you should that the operation should be computed before the loss function is calculated:
+```
+update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+# puis par exemple
+with tf.control_dependencies(update_ops):
+            grads_dis = self.optimizer.compute_gradients(loss=self.dis_loss, var_list=self.dis_variables)
+            self.train_dis = self.optimizer.apply_gradients(grads_dis)
+```
 The trainable boolean can be a placeholder, so that depending on the feeding dictionnary, the computation in the batch norm layer will be different
 
 # Preprocessing
@@ -354,6 +342,30 @@ It is possible to load data directly from numpy arrays, however it is best pract
     ```
 
 # Computer vision application
+## Convolution
+Reminder on simple convolution:
+* Given an input of channel size |k| equal 1, the neuron (one output) of a feature map (a channel, let's say channel 1 in the output) is the result given by a filter W1 apply to some location in the single input channel. Then you stride the same filter over the input image, and compute another input for the same output channel. Every output channel has its own filter.  
+* Now if the input channel size |k| is superieur than 1, for each output channel, there as k filter (kernel). Each of theses filter is applied respectively on every input channel location and then sum (not mean) to give the value of a neuron. Hence the number of parameters in a convolution is ```|filter_height * filter_width * nb_input_channels * nb_output_channels|```. This is also why its difficult for the first layer of a convolution neural network to catch high level features because usually the input channel size is small, and hence, the information for an output neuron, wasn't computed with a lot of filter. In deeper layer, usually output neuron in a given channel are computed by summing over a lot of filters, hence each filter can capture different representations.  
+Implementation:
+```
+# 5*5 conv, 1 input_channel_size, output_channel_size
+W = tf.Variable(tf.random_normal([5, 5, 1, 32]))
+# dimension of x is [batch_size, 28, 28, 1]
+x = tf.nn.conv2d(x, W, strides=[1, strides, strides, 1], padding='SAME')
+```
+
+## Transpose convolution
+There is nothing fancy in the formula of the transpose convolution, the only trick is that the input channel is transformed (padded) with respect to the size of the filter and the dimension of the output. Here is a nice example of deconvolutions: [deconvolution without no stride](https://i.stack.imgur.com/YyCu2.gif), and [deconvolution with stride](https://i.stack.imgur.com/f2RiP.gif).  
+Implementation:
+```
+# h2 is of shape [self.batch_size, 7, 7, 128]
+output_shape_h3 = [self.batch_size, 14, 14, 64]
+# filter_size, output_channel_size, input_channel_size
+W3 = utils.weight_variable([5, 5, 64, 128], name="W3")
+b3 = utils.bias_variable([64], name="b3")
+h3 = utils.conv2d_transpose(h2, W3, b3, output_shape_h3, strides=[1, 2, 2, 1], padding="SAME")
+```
+
 
 
 
