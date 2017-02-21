@@ -38,7 +38,6 @@ To collect and retrieve vales associated with a graph, it is possible to get the
 ### Split training variables between multiple neural networks
 Imagine two neural networks, created in two different scopes, one in "generator" scope, and one in "discriminator" scope.  
 1. First you need to retrieve all trainable variable with ```train_variables = tf.train_variables()```  
-
 2. Then you split the training variable in two lists:
 	```
         list_gen = self.generator_variables = [v for v in train_variables if v.name.startswith("generator")]
