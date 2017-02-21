@@ -181,10 +181,20 @@ cost_function = -tf.reduce_sum(var)
 tf.summary.scalar("cost_function", cross_entropy)
 ```
 
+### Summary about a python scalar
+It is also possible to add a summary for a python scalar
+```
+summary_accuracy = tf.Summary(value=[
+            tf.Summary.Value(tag="value_name", simple_value=value_to_save),
+        ])
+```
+You can call this function as many time as you want, if you call it with the same tag, no duplicate value will be saved. You can even plot a graph of this python value, by writing the ```summary_accuracy``` every epoch.
+
 ### Merge all summaries operations
 ```python
 merged_summary_op = tf.summary.merge_all()
 ```
+If you create new summary after this function, they won't be collect by calling ```merged_summary_op```.
 
 ### Collect stat during each iteration
 ```python
