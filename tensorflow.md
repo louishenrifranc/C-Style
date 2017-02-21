@@ -40,9 +40,9 @@ Imagine two neural networks, created in two different scopes, one in "generator"
 1. First you need to retrieve all trainable variable with ```train_variables = tf.train_variables()```  
 2. Then you split the training variable in two lists:  
 	```
-        list_gen = self.generator_variables = [v for v in train_variables if v.name.startswith("generator")]
+	list_gen = self.generator_variables = [v for v in train_variables if v.name.startswith("generator")]
 	list_dis = self.discriminator_variables = [v for v in train_variables if v.name.startswith("discriminator")]	
-	```
+	```  
 3. Create two functions for training them:  
 	```
 	grads = optimizer.compute_gradients(loss_generator, var_list=list_gen)
