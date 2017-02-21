@@ -225,12 +225,18 @@ summary_writer.add_summary(summary_str, current_iter (must be unique id))
     ```
     
 # Saver
-## Introduction
-By default, the ```tf.train.Saver()``` handles all variable relative to the default graph. But you can precise which variable to save with their name: ```tf.train.Saver({"var1": var})```. During the session, you call the save object, with a session, and a path: ```saver.save(session, logdir)```.  
-For each call of the save() function, three files are created + a checkpoint.  
-## Load a graph, and session variables
-* You can loaded a graph saved (not in a session) with the command: ```tf.train.import_meta_graph('results/model.ckpt-*.meta')```. Afterwards, a call to ```tf.get_default_graph()``` will return the graph just created.
-* You can loaded variable associated with a Session, in a session, with the command ```saver.restore(sess, 'results/model.ckpt.data-*')```. 
+Exemple
+```
+sess.run(tf.global_variables_initializer())
+saver = tf.train.Saver(max_to_keep=5) # max number of checkpoint to save
+last_saved_model = tf.train.latest_checkpoint('./')
+if last_saved_model is not None:
+    saver.restore(sess, last_saved_model)
+
+# during the training session
+if itr % 100 == 0:
+    saver.save(sess, global_step=itr, save_path="model")
+```
 
 ## Files saved
 * The checkpoint file is use in combination of hih level helper	for different time loading saved chkg
@@ -264,6 +270,32 @@ w = tf.Variable()
 cost = # define your loss
 regularizer = tf.nn.l2_loss(w)
 loss = cost + regularizer
+```
+### L1 and L2 regularization
+```
+def l1_l2_regularizer(weight_l1=1.0, weight_l2=1.0, scope=None):
+    """
+    L1 and L2 regularizer
+    :param weight_l1:
+    :param weight_l2:
+    :param scope:
+    :return:
+    """
+    def regularizer(tensor):
+        with tf.name_scope(scope, 'L1L2Regularizer', [tensor]):
+            weight_l1_t = tf.convert_to_tensor(weight_l1,
+                                               dtype=tensor.dtype.base_dtype,
+                                               name='weight_l1')
+            weight_l2_t = tf.convert_to_tensor(weight_l2,
+                                               dtype=tensor.dtype.base_dtype,
+                                               name='weight_l2')
+            reg_l1 = tf.multiply(weight_l1_t, tf.reduce_sum(tf.abs(tensor)),
+                                 name='value_l1')
+            reg_l2 = tf.multiply(weight_l2_t, tf.nn.l2_loss(tensor),
+                                 name='value_l2')
+            return tf.add(reg_l1, reg_l2, name='value')
+
+    return regularizer
 ```
 ### Dropout
 ```
@@ -580,6 +612,8 @@ Here is a non exhaustive list of usefull command:
 * ```tf.variable_scope(name_or_scope, default_name)```: if name_or_scope is None, then scope.name is default_name.
 * ```tf.get_default_graph().get_operations()```: return all operations in the graph, operations can be filtered by scope then with the python function ```startwith```. It returns a list of tf.ops.Operation
 * ```tf.expand_dims([1, 2], axis=1)``` return a tensor where the axis dimensions is expanded. Here the new shape will be (2) -> (2, 1)
+* ```tf.groups(op_1, op_2, op_3)``` can be pass to sess.run and it will run all operations (but it will not return any output, only computed operations) 
+* ```tf.nn.sparse_softmax_cross_entropy_with_logits(labels, logits) expects labels to be int32 of size (batchsize), where every element is an integer from 0 to nbclasses. logits should be a float32 vector of size (batchsize, nbclasses) with values in it are not probabilities (logit form, before softmax)
 * FLAGS is an internal mecanism that allowed the same functionnality as argparse
 * ```clip_discriminator_var_op = [var.assign(tf.clip_by_value(var, clip_value_min, clip_value_max)) for
                                          var in list_tf_variables]``` create an operator to run in a sess that will clip values.
@@ -608,3 +642,80 @@ All tensorflow_fold function to treat sequences:
 * td.Zip(): Takes a tuple of sequences as inputs, and produces a sequence of tuples as output.
 * td.Broadcast(a): Takes the output of block a, and turns it into an infinite repeating sequence. Typically used in conjunction with Zip and Map, to process each element of a sequence with a function that uses a.
 
+# Tensorflow contrib learn
+### Create an estimator
+```python
+nn = tf.contrib.learn.Estimator(model_fn = a_function,
+								params=some_parameters,
+								model_dir=where_to_log,
+								contrib=tf.contrib.learn.RunConfig(save_checkpoints_sec=10))
+```    
+
+### The model function
+Here is a simple example of model function
+```
+def model_fn(features, targets, mode, params):
+	"""
+	features: vector of feature vector
+	targets: vector of labels
+	model: string (train or test)
+	params: a dictionnary of params (optionnal)
+	"""
+
+	# 1. get input
+	# 2. build NN
+	# 3. output = get_output
+	prediction = create_vector_of_prediction_output()
+	loss = create_loss_function(targets, output)
+	accuracy = accuracy_function(targets, output)
+
+	# You can had any summary in this function, they will be saved when building the model
+
+	# Call optimize_loss
+	train_op = tf.contrib.layers.optimize_loss(
+        loss=loss,
+        global_step=tf.contrib.framework.get_global_step(),
+        learning_rate=some_lr_rate_values,
+        optimizer=(lambda l_r: optimizer(l_r)),
+        summaries=tf.GraphKeys.TRAIN_OP)
+
+    return model_fn_lib.ModelFnOps(
+        mode=mode,
+        predictions=prediction,
+        loss=loss,
+        train_op=train_op)  
+
+```
+
+
+### Monitor some values
+You can monitor specific tensor, or also some metrics. First you need to create some ValidationMonitor function:  
+#### Monitor early stopping or some accuracy
+```
+validation_monitor = tf.contrib.learn.monitors.ValidationMonitor(
+        x=x_val,
+        y=y_val,
+        metrics=metric_function
+        early_stopping_metric="loss", # early stopp on xval and yval given some metrics         
+        early_stopping_metric_minimize=True,
+        early_stopping_rounds=int)
+```  
+The metric function is of form
+```
+def metric_function(predictions, labels):
+    return value
+```
+### Monitor values of tensor
+```
+tensors_to_log = {"Random name": "name_of_tensor_in_graph"}
+logging_hook = tf.train.LoggingTensorHook(tensors=tensors_to_log, every_n_iter=print_each_nb_iters)
+```
+### Fit a model
+```
+nn.fit(x=x_train, y=y_train, steps=200, monitors=[logging_hook, validation_monitor])
+```
+
+### Evaluate a model
+```
+nn.evaluate(x=x_test, y=y_test
+```
