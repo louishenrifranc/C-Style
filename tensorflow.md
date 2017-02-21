@@ -28,6 +28,7 @@ sess = tf.InteractiveSession()
 
 # stop the session
 sess.stop()
+ops.reset_default_graph()
 ```
 
 ### Collect variable in the graph
@@ -39,15 +40,22 @@ To collect and retrieve vales associated with a graph, it is possible to get the
 Imagine two neural networks, created in two different scopes, one in "generator" scope, and one in "discriminator" scope.  
 1. First you need to retrieve all trainable variable with ```train_variables = tf.train_variables()```  
 2. Then you split the training variable in two lists:  
-	```
-	list_gen = self.generator_variables = [v for v in train_variables if v.name.startswith("generator")]
-	list_dis = self.discriminator_variables = [v for v in train_variables if v.name.startswith("discriminator")]	
-	```  
+```
+list_gen = self.generator_variables = [v for v in train_variables if v.name.startswith("generator")]
+list_dis = self.discriminator_variables = [v for v in train_variables if v.name.startswith("discriminator")]	
+```  
 3. Create two functions for training them:  
-	```
-	grads = optimizer.compute_gradients(loss_generator, var_list=list_gen)
-	train_gen = optimizer.apply_gradients(grads)
-	```
+```
+grads = optimizer.compute_gradients(loss_generator, var_list=list_gen)
+train_gen = optimizer.apply_gradients(grads)
+```
+
+### Get an approximation of the size in byte of the graph
+```
+for v in tf.global_variables():
+	vars += np.prod(v.get_shape().as_list())
+vars *= 4
+```
 
 # Dynamic shape vs Static shape
 For getting the dynamic shape, running a session is necessary, because ds = ss where all None are replaced by the session dimension. Example
