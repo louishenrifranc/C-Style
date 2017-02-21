@@ -1,12 +1,53 @@
+# Index
+- [Graph and Session notions](#graph-and-session)
+- [Dynamic and Static shape](#dynamic-shape-vs-static-shape)
+- [Tensorflow variable](#variable)
+- [Structure tensorflow code with decorator](#how-to-structure-a-tensorflow-model)
+- [Save and restore model](#checkpoint)
+- [Tensoarboard](#tensoarboard)
+- [Regularization](#regularization)
+- [Preprocessing](#preprocessing)
+- [CNN & shits](#computer-vision-application)
+- [RNN & shits](#nlp-application)
+- [Higher order operations](#higher-order-operators)
+- [Debugging](#debugging)
+- [Miscellanous](#miscellanous)
+- [Dynamic graph computation](#tensorflow-fold)
+- [Tensorflow Estimator](#tensorflow-estimator)
+
 # Graph and Session
+### Graph vs Session
 * A graph defines the computation. It doesn’t compute anything, it doesn’t hold any values, it just defines the operations that you specified in your code.
 * A session allows to execute graphs or part of graphs. It allocates resources (on one or more machines) for that and holds the actual values of intermediate results and variables. One can create a session with tf.Session, and be sure to use a context manager, or tf.Session.close(), because all ressources of the session are saved. To run some graph element, you should use the function .run(graph_element, feed_dic), it return values, or list of values, if a list of graph elements was passed.
 
-# Variable
-## Some parameters
-* Setting trainable=False keeps the variable out of the GraphKeys.TRAINABLE_VARIABLES collection in the graph, so we won't try and update it when training. 
-* Setting collections=[] keeps the variable out of the GraphKeys.GLOBAL_VARIABLES collection used for saving and restoring checkpoints.  
-Example: ```input_data = tf.Variable(data_initializer, trainable=False, collections=[])```
+### Interactive session
+Interactive session is usefull when multiple different sessions needed to be run in a same script
+```
+start the session
+sess = tf.InteractiveSession()
+
+# stop the session
+sess.stop()
+```
+
+### Collect variable in the graph
+To collect and retrieve vales associated with a graph, it is possible to get them with GraphKeys. For example ```GLOBAL_VARIABLE```, or ```MODEL_VARIABLE```, or ```TRAINABLE_VARIABLE```, ```QUEUE_RUNNERS```, or even more specifically the ```WEIGHTS```, ```BIASES```, or ```ACTIVATIONS```.
+
+* You can get the name of all variables that have not been initialized by passing a list of Variable to the function ```tf.report_uninitialized_variables(list_var). It returns a list of names of uninitialized variables
+
+### Split training variables between multiple neural networks
+Imagine two neural networks, created in two different scopes, one in "generator" scope, and one in "discriminator" scope.  
+1. First you need to retrieve all trainable variable with ```train_variables = tf.train_variables()```
+2. Then you split the training variable in two lists:
+	```
+        list_gen = self.generator_variables = [v for v in train_variables if v.name.startswith("generator")]
+	list_dis = self.discriminator_variables = [v for v in train_variables if v.name.startswith("discriminator")]	
+	```
+3. Create two functions for training them: 
+	```
+	grads = optimizer.compute_gradients(loss_generator, var_list=list_gen)
+	train_gen = optimizer.apply_gradients(grads)
+	```
 
 # Dynamic shape vs Static shape
 For getting the dynamic shape, running a session is necessary, because ds = ss where all None are replaced by the session dimension. Example
@@ -18,6 +59,12 @@ sess = tf.Session()
 sess.run(tf.global_variables_initializer())
 print(sess.run(dynamic_shape, feed_dict={var: [[1, 2], [1, 2]]}))  # => [2 2]
 ```
+
+# Variable
+## Some parameters
+* Setting trainable=False keeps the variable out of the GraphKeys.TRAINABLE_VARIABLES collection in the graph, so they won't be trained when backpropagating. 
+* Setting collections=[] keeps the variable out of the GraphKeys.GLOBAL_VARIABLES collection used for saving and restoring checkpoints.  
+Example: ```input_data = tf.Variable(data_initializer, trainable=False, collections=[])```
 
 ## Shared variable
 It is possible to reuse weights, just by setting new variable to older one defined previously. For that, you must be in the same namescope, and look for a variable with the same name. Here is an example:
@@ -145,12 +192,52 @@ def main():
 if __name__ == '__main__':
     main()
 ```
+
 # Checkpoint
-/TODO
+### Save and Restore
+```
+sess.run(tf.global_variables_initializer())
+saver = tf.train.Saver(max_to_keep=5) # max number of checkpoint to save
+last_saved_model = tf.train.latest_checkpoint('./')
+# Restore
+if last_saved_model is not None:
+    saver.restore(sess, last_saved_model)
+
+# Save during the training session
+if itr % 100 == 0:
+    saver.save(sess, global_step=itr, save_path="model")
+```
+
+### What are the files saved
+* The checkpoint file is use in combination of high level helper	for different time loading saved chkg
+* The meta chkp hold the compressed Protobuf graph of your model and all te metadata associated
+* The chkp file holds the data
+* The events file store everything for visualization
+
+### Connect graph already trained
+It is possible to connect multiple graph, for example if you want to connect vgg19 to a new graph, and only trained the last one, here is a simple example:
+```
+vgg_saver = tf.train.import_meta_graph(dir + '/vgg/results/vgg-16.meta')
+vgg_graph = tf.get_default_graph()
+
+# retrieve inputs
+self.x_plh = vgg_graph.get_tensor_by_name('input:0')
+
+# choose the node to connect to 
+output_conv =vgg_graph.get_tensor_by_name('conv1_2:0')
+
+# stop the gradient for fine tuning
+output_conv_sg = tf.stop_gradient(output_conv)
+
+# create your own neural network
+output_conv_shape = output_conv_sg.get_shape().as_list()
+"""..."""
+```
+
 # Tensoarboard
 * Launch a session with ```tensorboard --logdir=""```.
 
-### Save a graph
+### Save the graph for Tensorflow visualization
 The FileWriter class provides a mechanism to create an event file in a given directory and add summaries and events to it. The class updates is called asynchronously, which means it will never slow down the training loop calling.
 ```python
 sess = tf.Session()
@@ -173,6 +260,7 @@ def add_gradient_summary(grad, var):
 Automatic rescaling of float value to value between [0, 255]  
 ```
 tf.summary.image([batch_size, height, width, channels], max_output= num_max_of_images_to_display)```
+```
 
 ### Summary about a cost function
 ```
@@ -234,44 +322,6 @@ summary_writer.add_summary(summary_str, current_iter (must be unique id))
     projector.visualize_embeddings(tf.summary.FileWriter(LOG_DIR), config)
     ```
     
-# Saver
-Exemple
-```
-sess.run(tf.global_variables_initializer())
-saver = tf.train.Saver(max_to_keep=5) # max number of checkpoint to save
-last_saved_model = tf.train.latest_checkpoint('./')
-if last_saved_model is not None:
-    saver.restore(sess, last_saved_model)
-
-# during the training session
-if itr % 100 == 0:
-    saver.save(sess, global_step=itr, save_path="model")
-```
-
-## Files saved
-* The checkpoint file is use in combination of hih level helper	for different time loading saved chkg
-* The meta chkp hold the compressed Protobuf graph of your model and all te metadata associated
-* The chkp file holds the data
-* The events file store everything for visualization
-## Connect graphs
-It is possible to connect multiple graph, for example if you want to connect vgg19 to a new graph, and only trained the last one, here is a simple example:
-```
-vgg_saver = tf.train.import_meta_graph(dir + '/vgg/results/vgg-16.meta')
-vgg_graph = tf.get_default_graph()
-
-# retrieve inputs
-self.x_plh = vgg_graph.get_tensor_by_name('input:0')
-
-# choose the node to connect to 
-output_conv =vgg_graph.get_tensor_by_name('conv1_2:0')
-
-# stop the gradient for fine tuning
-output_conv_sg = tf.stop_gradient(output_conv)
-
-# create your own neural network
-output_conv_shape = output_conv_sg.get_shape().as_list()
-"""..."""
-```
 
 # Regularization
 ### L2 regularization
@@ -311,6 +361,7 @@ def l1_l2_regularizer(weight_l1=1.0, weight_l2=1.0, scope=None):
 ```
 hidden_layer_drop = tf.nn.dropout(some_activation_output, keep_prob)
 ```
+
 ### Batch normalization
 Use the tf.nn.contrib.layers.batch_norm
 ```
@@ -318,6 +369,7 @@ is_training = tf.placeholder(tf.bool)
 batch_norm(pre_activation, is_training=is_training, scale=True)
 ```  
 By default, movingmean, and movingscale are not in the default graph, but in _updateOperation, hence to compute the movingmean, and movingscale, you should that the operation should be computed before the loss function is calculated:
+
 ```
 update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 # puis par exemple
@@ -325,6 +377,7 @@ with tf.control_dependencies(update_ops):
             grads_dis = self.optimizer.compute_gradients(loss=self.dis_loss, var_list=self.dis_variables)
             self.train_dis = self.optimizer.apply_gradients(grads_dis)
 ```
+
 The trainable boolean can be a placeholder, so that depending on the feeding dictionnary, the computation in the batch norm layer will be different
 
 # Preprocessing
@@ -548,9 +601,7 @@ outputs, states  = tf.nn.bidirectional_dynamic_rnn(
 output_fw, output_bw = outputs
 states_fw, states_bw = states
 ```
-# Graphs
-To collect and retrieve vales associated with a graph, it is possible to get them with GraphKeys. For example ```GLOBAL_VARIABLE```, or ```MODEL_VARIABLE```, or ```TRAINABLE_VARIABLE```, ```QUEUE_RUNNERS```, or even more specifically the ```WEIGHTS```, ```BIASES```, or ```ACTIVATIONS```.
-* You can get the name of all variables that have not been initialized by passing a list of Variable to the function ```tf.report_uninitialized_variables(list_var). It returns a list of names of uninitialized variables
+
 
 # Higher order operators
 * tf.map_fn() : apply a function to a list of elements.
@@ -583,6 +634,7 @@ condition = lambda i, _: i<10
 body = lambda i, jk: return (i+1, (jk[0] - jk[1], jk[0] + jk[1]))
 (i_final, jk_final) = tf.while_loop(condition, body, init)
 ```
+
 # Debugging
 It is usefull to be able to monitor the training of a neural network, and add filter for events, such as the apparition of nan or inf number. To do so, clip a tensor filter to the current session  
 ```
@@ -628,20 +680,6 @@ Here is a non exhaustive list of usefull command:
 * ```clip_discriminator_var_op = [var.assign(tf.clip_by_value(var, clip_value_min, clip_value_max)) for
                                          var in list_tf_variables]``` create an operator to run in a sess that will clip values.
 
-### Split training between multiple neural networks
-Imagine two neural networks, created in two different scopes, one in "generator" scope, and one in "discriminator" scope.  
-1. First you need to retrieve all trainable variable with ```train_variables = tf.train_variables()```
-2. Then you split the training variable in two lists:
-	```
-        list_gen = self.generator_variables = [v for v in train_variables if v.name.startswith("generator")]
-	list_dis = self.discriminator_variables = [v for v in train_variables if v.name.startswith("discriminator")]	
-	```
-3. Create two functions for training them: 
-	```
-	grads = optimizer.compute_gradients(loss_generator, var_list=list_gen)
-	train_gen = optimizer.apply_gradients(grads)
-	```
-
 
 # Tensorflow fold
 All tensorflow_fold function to treat sequences:
@@ -652,7 +690,7 @@ All tensorflow_fold function to treat sequences:
 * td.Zip(): Takes a tuple of sequences as inputs, and produces a sequence of tuples as output.
 * td.Broadcast(a): Takes the output of block a, and turns it into an infinite repeating sequence. Typically used in conjunction with Zip and Map, to process each element of a sequence with a function that uses a.
 
-# Tensorflow contrib learn
+# Tensorflow Estimator
 ### Create an estimator
 ```python
 nn = tf.contrib.learn.Estimator(model_fn = a_function,
@@ -727,5 +765,5 @@ nn.fit(x=x_train, y=y_train, steps=200, monitors=[logging_hook, validation_monit
 
 ### Evaluate a model
 ```
-nn.evaluate(x=x_test, y=y_test
+nn.evaluate(x=x_test, y=y_test)
 ```
