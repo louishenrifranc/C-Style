@@ -1,0 +1,134 @@
+# Notation
+* _P(A)_ is the function that encodes the probabilities for each of the values of _A_
+* _p(a)_ is the function that attribute a density function for every value of _a_
+* _P(A = a)_ is the single probability of observing the event _a_. Usually _P(A = a)_ is simplified as _P(a)_, so one must remembers how _a_ was defined
+
+# Fundamentals rules
+1. __Product rule__: $P(A, B) = \text{joint distribution of A and B }= P(A| B) P(B)$
+2. __Sum rule__: Given the joint distribution of a random vector (the join distribution of all the random variable in the variable), the marginal probability is the probability of one variable. For a discrete variable, the marginal of $X_1$ is the sum over all the states: $P(X_1) = \sum_{x_2}...\sum_{x_n} P(X_1)P(X_2 = x_2)...P(X_n = x_n)$. For continuous random variable, integration over the all space replace the sum. The procedure is known as __marginalization__.
+3. __Bayes rule__: $P(B| A) = \frac{P(A| B)P(B)}{P(A)}$.  
+If we have a model for $P(A| B)$ and $P(B)$,  
+and we observe $P(A = a)$, then
+* P(A = a| B) is the likelihood g
+* P(B) is the prior
+* P(B| A=a) is the posterior distribution, and is hard to obtain
+4. __Chain rule__ $P(A, B, C, D) = P(A) P(B| A)P(C| B, A) P(D| C, B, Every other orders are also possible.
+
+# Bayesian network
+A Bayesian network is an __acyclic__ graph, which means that ordering nodes is possible.  
+Every nodes $A_i$ in the network can be expressed as $P(A_1, A_2, A_3) = \prod_{i=1}^3 P(A_i|Parents(A_i))$.  
+Here is an example of a Bayesian network:  
+
+![](http://users.sussex.ac.uk/~christ/crs/kr-ist/copied-pics/humidity-bayesian-network.png)	
+
+Example of a graph of 5 nodes:
+Starting node|Ending nodes
+-------------|-----------
+$X_1$|$X_3$, $X_4$
+$X_2$|$X_4$, $X_5$
+
+Given $\hat{X_4}$ observed, find the marginal of $X_3$ conditionned on the observed $\hat{X_4}$:  
+$P(x_3| \hat{x_4}) = \frac{P(x_3, \hat{x_4})}{\sum_{x_3}P(x_3, \hat{x_4})}$  
+$P(x_3, \hat{x_4}) = \sum_{x_1, x_2, x_5} P(x_1, x_2, x_3, x_4, x5)$  
+When we develop, we find that:  
+$P(x_3, \hat{x_4}) = \sum_{x_1, x_2, x_5} P(x_3 | x_1) P(x_4 | x_1, x_2) P(x_5 | x_2) P(x_1) P(x_2)$
+## Sum product algorithm
+Move as far as possible every element to the left  
+$P(x_3, \hat{x_4}) = \sum_{x_1}P(x_3 | x_1) P(x_1) \sum_{x_2}P(\hat{x_4} | x_1, x_2) P(x_2)\sum_{x_5} P(x_5 | x_2)$  
+$\sum_{x_5} P(x_5 | x_2) = 1$ by definition,  
+$\sum_{x_2}P(\hat{x_4} | x_1, x_2) = P(\hat{x_4} | x_1)$, hence  
+$P(x_3, \hat{x_4}) = \sum_{x_1} P(x_1) P(\hat{x_4} |x_1) P(x_3 | x_1) = \sum_{x_1}P(x_1, x_3, \hat{x_4})$
+
+## Independance rules
+* A node is conditionnaly independant of its non descendant, given its parents
+* A node is conditionnaly independant of every node given its Markov blanket
+
+## Factor grph
+Il est possible de créer une fontion à partir de s fonctions de sous ensembles de variables ${X}_i$, tel que $F(x_1, x_2 ...) = \prod_{i=1}^nf_i({x}_i)$.
+Par exemple, supposons par définition, $P(A, D, C) = P(A| D)P(D| C)P(C) = f_1({A, D})f_2({D, C})f_3({C})$.
+
+## Belief algorithm
+Compute exact marginals in a tree like probabilistic graph model with __sumproduct__. In graph with cycle, it computes marginals with approximation.
+It uses the representation of a graph as a factor node graph. Messages are send between variables nodes to function nodes. Algorithm started at leafs and stop when
+every variables have send a message to all its neighbors.
+
+### Function to variable messages
+$m_{f->X}(X) = \sum{N(x)} f(x, N(x)) m_{X_1 -> f} m_{X_2 -> f}$ where N(x) is the set of nodes neighbors of f, and $N(x) = {X_1, X_2}$. In cases
+where an observation variable $\hat{X_3}$ is neigbor of f, no messages is sent from the observed variable to the function
+and the marginalization is reduced to $f(X_2, X_1, X| X_3)$.
+
+### Variable to function messages
+$m_{X->f} = m_{f_1 -> X} m_{f_2 -> X} ...$. It corresponds to the product of messages comming from all neighbors function
+except the one the message is send to.
+
+### End 
+When all messages are send, then the marginal can be computed. It is the product of all messages coming to the variable.
+
+### Finding the most probable configuration with max product
+Finding the msot probable configuration over all other variables in an examples where $x_2 = \hat{x_2}$, consists in
+finding ${x_1, x_3} = argmax(x_1, x_3) p(x_1, x_3| \hat{x_4})$.
+
+#### Max product exists in max sum formula using logarithm:
+* $m_{f->x}(x) = max_{x_1, x_m}[ ln(f(x, x_1, .. ,x_m)) + \sum_{m \in N(f_s) } m_{x_m -> f}(x_m)]$
+* $m_{x-> f}(x)= \sum_{f_i \in N(x)} m_{f_i > x}(x)$
+* Leaf nodes: $m_{x->f}(x) = 0$
+* Leaf functions: $m_{f->x} = lnf(x)$
+
+Then
+* $p_{max} = \max_x \sum_{s \in N(x)} m_{f_s -> x}(x)$
+* $x_{max} = argmax_x (***)$
+### Max product or Sum product ?
+* Sum product gives a strategy to marginalize distributions in a tree
+* Max product gives a strategy to find optimal variables configuration with max probability.
+
+### Exact inference in general graph
+In general graph, when there are cycle, belief algorithm don't converge always to the true marginalization. To compute 
+exact marginalization, you must transform the graph into a junction trees, where cycle are clustered together.  
+1. Build a non oriented graph (moral graph), remove orientations, and add edges between parents. 
+2. Add edge to the moral graph, until every cycle of more than four nodes, contains an edge between every non adjacent pairs .
+It is proved that a triangulized graph always lead to a junction tree.  
+4. Build the junction tree. A junction tree is a specific tree where a factorization is pre build. It is a clique graph
+where multiplication of potential lead to the joint distribution of all the variables.  
+At the end, the junction tree will be formed by variable nodes (old cliques), and function node (called sepset, it is
+the potential of the intersection of variable in both clique on every side of the edge started at the function).
+
+## D separation
+
+# Inference
+## Gibbs Sampling 
+Given some variables (X1, X2, X3), the objectives is to produce a sampling of the joint probability p(X1, X2, X3), (without even knowing the joint).
+All we need to know is the condition probability for any variables given all others.
+Here is the cyclic version of the Gibbs sampling:
+```
+z = sample(x1, x2, x3) # vector of three dimensions
+# then improve the sampling
+# improve during l iterations
+for _ in range(l):
+	for k in range(3):
+		Z[k] = f(x_k|z[x_~k]) # density functions
+```
+The original version of the Gibbs sampling is prone to big correlation between variables
+It does not iterate over all variables at every iteration, but choose to compute p(k|~k) for one random k 
+(Here k in [1, 3]).
+
+### Simulated annealing
+$x_k = p(x_k|\text{all others})^{\frac{1}{n}}$. Reduce the improvement over times.
+
+## Variational methods
+Rather than sampling from a complex distribution, we can approximate it with a simpler
+distribution, and make the approximated distribution closed to the true distribution.
+
+## Maximum likelihood
+__Goal__: Estimate a set of parameter $\theta$ of a distribution given a set of observations.
+The maximum likelihood assumptions are: 
+* No dependances between examples (independance)
+* Every example can be modeled exactly the same way (identically distributed)  
+which resumes mathematically to $p(x_1, x_2, x_n|\theta) = p(x_1|\theta)p(x_2|theta)p(x_3|\theta)$  
+The likelihood corresponds to $L(x_i; \theta) = \prod_{i=1}^n p(x_i; \theta)$.
+Because the data is fixed, we can adjust a $\theta$ to maximize the log likelihood:   
+$\theta = argmax_{\theta}log(p_{x_i; \theta})$
+
+## Maximum a posteriori
+The maximum a posteriori don't assumes a flat prior of $\theta$.
+Hence, the new function to optimize
+
