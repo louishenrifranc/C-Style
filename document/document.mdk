@@ -138,4 +138,13 @@ There is often, no closed form for the solution of the ML, MAP.
 ## Evaluating the quality of a model:
 * AIC score = -log likelihood + number of examples
 * MDL = -log likelihood + $\frac{\text{number of paremeter}}{2}log(\text{number of examples})$
-We try to minize theses scores (reasondminus sign)
+We try to minize theses scores (reason for a minus sign)
+
+## Expected maximization
+pass
+
+## Generative vs Discriminant
+In a probabilistic approach, we always try to maximize the likelihood given our data examples.  
+* In generative approach, we try to understand how x and y have been generated p(y, x)  
+* In discriminant approach, we only look to understand how y is calculated given x.  
+
