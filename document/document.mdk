@@ -132,6 +132,9 @@ $\theta = argmax_{\theta}log(p_{x_i; \theta})$
 The maximum a posteriori don't assumes a flat prior of $\theta$.
 Hence, the new function to optimize is $\theta_{MAP} = argmax_{\theta}(\sum_i log(p(x_i;\theta) + p(\theta)))$
 
+## Empirical risk minimization
+ERM is similar as the ML, but some cost is added to the model (typically regularization terms).
+
 ### Problème du ML
 There is often, no closed form for the solution of the ML, MAP.
 
@@ -150,5 +153,19 @@ In a probabilistic approach, we always try to maximize the likelihood given our 
 
 ### Generative
 Here is an example. We want to find p(X, z) given that z is a binary vector, and X|z is a Gaussian
-Hence under the iid assumptions:  
-$p(X, z) = \prod_{i=1}^n
+Hence under the iid assumptions, (same covariance matrix), the joint distribution we try to maximize is:  
+$p(X, z) = \prod_{i=1}^n (\pi N(x_i|\mu_{1}, \Sigma))^{z}((1 - \pi)N(x_i|\mu_{2}, \Sigma))^{1-z}$
+where $N(x_i|\mu_1)$ is the density function of the conditional probability applied
+for z=1.
+Then we can computed all parameters of the model, it allows us to computed p(z|x) afterwards.
+
+## Condition probability based on kernels
+Linear models can be transformed into non linear ones by applying the kernel trick
+Kernel trick is very simple: map input data to a higher space using scalar products operations.
+
+## Regularization
+* Placing a zero mean Gaussian prior on the parameters w lead to the method of ridge regression (weight decay, l2). 
+The assmption lead to estimating the mean.
+* Placing a Laplace prior for the distribution over the weights yields an L1 based regularization, where the Laplace 
+distribution is:  
+$p(w) = \frac{1}{2b}\exp(-(\frac{|w - \mu|}{b}))$.
