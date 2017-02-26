@@ -130,5 +130,12 @@ $\theta = argmax_{\theta}log(p_{x_i; \theta})$
 
 ## Maximum a posteriori
 The maximum a posteriori don't assumes a flat prior of $\theta$.
-Hence, the new function to optimize
+Hence, the new function to optimize is $\theta_{MAP} = argmax_{\theta}(\sum_i log(p(x_i;\theta) + p(\theta)))$
 
+### Problème du ML
+There is often, no closed form for the solution of the ML, MAP.
+
+## Evaluating the quality of a model:
+* AIC score = -log likelihood + number of examples
+* MDL = -log likelihood + $\frac{\text{number of paremeter}}{2}log(\text{number of examples})$
+We try to minize theses scores (reasondminus sign)
