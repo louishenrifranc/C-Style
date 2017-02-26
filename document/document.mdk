@@ -200,6 +200,7 @@ the Laplace distribution is an estimation of the median of the data.
 #### Laplace distribution
 $p(w) = \frac{1}{2b}\exp(-(\frac{|w - \mu|}{b}))$.
 
+# Data transformation
 ## Principal Component Analysis
 Find direction of greatest variance.  
 
