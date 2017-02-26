@@ -148,3 +148,7 @@ In a probabilistic approach, we always try to maximize the likelihood given our 
 * In generative approach, we try to understand how x and y have been generated p(y, x)  
 * In discriminant approach, we only look to understand how y is calculated given x.  
 
+### Generative
+Here is an example. We want to find p(X, z) given that z is a binary vector, and X|z is a Gaussian
+Hence under the iid assumptions:  
+$p(X, z) = \prod_{i=1}^n
