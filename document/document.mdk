@@ -154,13 +154,17 @@ $L(x; \theta)= L((x, z); \theta) - \sum_{i=1}^nlog(p(z|x;\theta))$.
 L'algorithme EM est une procédure itérative basé sur l'ésperance des données
 cachées conditonnelement au paramètre courant.
 $E[L(x; \theta)] = E[L((x, z); \theta)] - E[\sum_{i=1}^nlog(p(z|x;\theta))]$.  
-Exemple simple de mélange de Gaussienne:  
+### Exemple simple de mélange de Gaussienne:  
 Supposons un échantillon de données $(x_1, x_2, ..., x_n)$ issu de g différents groupes,
 Chaqun des groupes suit une loi de paramètre $f(\theta_k)$, et $p(z_k) = \sigma_k$.  
 $\Theta =$ tous les paramètres du modèle. 
 On a:  
-Log vraisemblance de $\Theta:$$L(x, \Theta) = \sum_{i=1}^n p(x;\theta) = \sum_{i=1}^n log\sum_{k=1}^K p(x_i|z_k)\pi_k$ gràce à la règle de marginalisation  
-$L(x,z; \Theta) = \sum_{i=1}^n$
+Log vraisemblance de $\Theta:$$L(x, \Theta) = \sum_{i=1}^n p(x;\theta) = \sum_{i=1}^n log\sum_{k=1}^K p(x_i|z_k)\pi_k$ gràce à la règle de marginalisation  .
+Cependant cette fonction à maximiser est très compliquée car il y a beaucoup de paramètre à optimiser.  
+Il serait plus cool de connaître l'appartenance à chaque classe de chaque variable de nos données  
+
+
+$L(x,z; \Theta) = \sum_{i=1}^n \sum_{k=1}^n p(z_k|x_i)p(x_i; \theta)$
 
 
 ## Generative vs Discriminant
