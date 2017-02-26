@@ -144,7 +144,8 @@ There is often, no closed form for the solution of the ML, MAP.
 We try to minize theses scores (reason for a minus sign)
 
 ## Expected maximization
-pass
+Example of the use of EM in the cases where variables X are generated from hidden
+random variable z, but we don't know the underlying relation.
 
 ## Generative vs Discriminant
 In a probabilistic approach, we always try to maximize the likelihood given our data examples.  
@@ -157,7 +158,8 @@ Hence under the iid assumptions, (same covariance matrix), the joint distributio
 $p(X, z) = \prod_{i=1}^n (\pi N(x_i|\mu_{1}, \Sigma))^{z}((1 - \pi)N(x_i|\mu_{2}, \Sigma))^{1-z}$
 where $N(x_i|\mu_1)$ is the density function of the conditional probability applied
 for z=1.
-Then we can computed all parameters of the model, it allows us to computed p(z|x) afterwards.
+Then we can computed all parameters of the model, it allows us to computed p(z|x) afterwards,
+even do discriminant linear analysis to classify x.
 
 ## Condition probability based on kernels
 Linear models can be transformed into non linear ones by applying the kernel trick
@@ -166,6 +168,8 @@ Kernel trick is very simple: map input data to a higher space using scalar produ
 ## Regularization
 * Placing a zero mean Gaussian prior on the parameters w lead to the method of ridge regression (weight decay, l2). 
 The assmption lead to estimating the mean.
-* Placing a Laplace prior for the distribution over the weights yields an L1 based regularization, where the Laplace 
-distribution is:  
+* Placing a Laplace prior for the distribution over the weights yields an L1 based regularization, because
+the Laplace distribution is an estimation of the median of the data.
+#### Laplace distribution
 $p(w) = \frac{1}{2b}\exp(-(\frac{|w - \mu|}{b}))$.
+
