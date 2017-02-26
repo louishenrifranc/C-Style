@@ -160,9 +160,16 @@ Chaqun des groupes suit une loi de paramètre $f(\theta_k)$, et $p(z_k) = \sigma
 $\Theta =$ tous les paramètres du modèle. 
 On a:  
 Log vraisemblance de $\Theta:$$L(x, \Theta) = \sum_{i=1}^n p(x;\theta) = \sum_{i=1}^n log\sum_{k=1}^K p(x_i|z_k)\pi_k$ gràce à la règle de marginalisation  .
-Cependant cette fonction à maximiser est très compliquée car il y a beaucoup de paramètre à optimiser.  
-Il serait plus cool de connaître l'appartenance à chaque classe de chaque variable de nos données  
-
+Cependant cette fonction à maximiser est très compliquée car il y a beaucoup 
+de paramètre (la seconde somme doit être développer pour tous les k et cela devient très compliqué d'optimiser).
+Donc la solution est que dans la seconde somme, seulement un des termes sera non nuls.  
+Il serait plus cool de connaître l'appartenance à chaque classe de chaque variable de nos données, et donc de réduire les calculs  
+Pour cela on introduit les termes $z_{ik}$ qui vaut 1 si l'individu $x_i$ appartient à la classe k, 0 sinon
+Ainsi le calcul devient  
+$\Theta:$$L(x,z, \Theta) = \sum_{i=1}^n p(x;\theta) = \sum_{i=1}^n z_{ik} log\sum_{k=1}^K p(x_i|z_k)\pi_k$
+On obtient donc $Q(\theta, \theta_{hidden})= \sum_{i}\sum_{k}E(z_{ik}| x_i, \theta_{hidden}) log(\pi_k f(x_i, \theta_k))$
+* L'étape E consiste à calculer l'ésperance, en inversant la formule de Bayes p(z|x) = p(x|z)p(z)/\sum(p(x|z)(z))
+* L'étape M consiste à calculer le max de \sum_{i}\sum_{k}t_{ik}log(\pi_k)f(x_i,\theta)$
 
 $L(x,z; \Theta) = \sum_{i=1}^n \sum_{k=1}^n p(z_k|x_i)p(x_i; \theta)$
 
@@ -193,3 +200,9 @@ the Laplace distribution is an estimation of the median of the data.
 #### Laplace distribution
 $p(w) = \frac{1}{2b}\exp(-(\frac{|w - \mu|}{b}))$.
 
+## Principal Component Analysis
+Find direction of greatest variance.  
+
+## Independant component analysis
+PCA find a coordinate system that captures the covariance of the data.  
+ICA seeks a projection that decomposes the data into sources that are statically independan
