@@ -68,6 +68,9 @@ sess.run(tf.global_variables_initializer())
 print(sess.run(dynamic_shape, feed_dict={var: [[1, 2], [1, 2]]}))  # => [2 2]
 ```
 
+### Sparse vector
+Sparse vector are created usually from sequence features when parsing a protobuf example. By default, all sequence features are transformed into sparse vector. To transform them back in a dense vector, use ```tf.sparse_tensor_to_dense(sparse_vector)```
+
 # Variable
 ## Some parameters
 * Setting trainable=False keeps the variable out of the GraphKeys.TRAINABLE_VARIABLES collection in the graph, so they won't be trained when backpropagating. 
@@ -292,15 +295,21 @@ merged_summary_op = tf.summary.merge_all()
 ```
 If you create new summary after this function, they won't be collect by calling ```merged_summary_op```.
 
-### Collect stat during each iteration
+### Collect stats during each iteration
 ```python
+# First compute the global_step
+# Global step is a variable passed to the optimizer and is incremented each times
+# optimizer.apply_gradients(grads, global_step=self.global_step)
+current_iter = self._sess.run(self.global_step)
+
+# Run the summary function
 summary_str, _ = sess.run([merged_summary_op, optimize], {x: batchX, y: batchY})
-summary_writer.add_summary(summary_str, current_iter (must be unique id))
+summary_writer.add_summary(summary_str, current_iter)
 ```
 
 ### Plot embeddings
 
-1. Create an embedding vector (dim: nb_embeddings, embedding_size)
+1. Create an embedding vector (dim: nb_embeddings, embedding_size) or 
     ```python
     embedding = tf.Variable(tf.random_normal([nb_embedding, embedding_size]))
     ```
@@ -309,25 +318,37 @@ summary_writer.add_summary(summary_str, current_iter (must be unique id))
     ```	
     LOG_DIR = 'log/'
     metadata = os.path.join(LOG_DIR, 'metadata.tsv')
+    # Mention label name
+    metadata_file.write("Label1\tLabel2\n")
     with open(metadata, 'w') as metadata_file:
-        for name in whatever_object:
-            metadata_file.write('%s\n' % name)
+        for data in whatever_object:
+            metadata_file.write('%s\t%s\n' % data.label1, data.label2)
     ```
 
 3. Save embedding
     ```    
     # See more advance tuto on Saver object
-    saver = tf.train.Saver([movie_embedding])
-    saver.save(sess, os.path.join(LOG_DIR, 'movie_embeddings.ckpt'))
+    tf.global_variables_initializer().run()
+    saver = tf.train.Saver()
+    saver.save(sess, save_path=os.path.join(log_dir, 'model.ckpt'), global_step=None)
     ```
 
 4. Create a projector for Tensorboard
     ```
+    summary_writer = tf.summary.FileWriter(log_dir, graph=tf.get_default_graph())
+
+    metadata_path = os.path.join(log_dir, "metadata.tsv") # file for name metadata (every line is an embedding)
     config = projector.ProjectorConfig()
+
     embedding = config.embeddings.add()
-    embedding.tensor_name = embedding.name # embedding is the tf.Variable()
-    embedding.metadata_path = metadata # metadata is a filename
-    projector.visualize_embeddings(tf.summary.FileWriter(LOG_DIR), config)
+    embedding.metadata_path = metadata_path
+
+    embedding.tensor_name = embeddings.name
+
+    # Add spirit metadata
+    embedding.sprite.image_path = filename_spirit_picture
+    embedding.sprite.single_image_dim.extend([thumbnail_width, thumbnail_height])
+    projector.visualize_embeddings(summary_writer, config
     ```
     
 
@@ -388,8 +409,9 @@ with tf.control_dependencies(update_ops):
 
 The trainable boolean can be a placeholder, so that depending on the feeding dictionnary, the computation in the batch norm layer will be different
 
-# Preprocessing
-It is possible to load data directly from numpy arrays, however it is best practise to use ```tf.SequenceExample```. It is very verbose, but allows reusability, and really split between the model and the data preprocessing  
+# Preprocessing examples with Queues
+It is possible to load data directly from numpy arrays, however it is best practise to use protobuf tensorflow formats such as ```tf.Example``` or ```tf.SequenceExample```. 
+However, it is very verbose, but allows reusability, and really split between the model and the data preprocessing  
 
 1. Create a function to transform a batch element to a ```SequenceExample```:  
     ```python
@@ -397,18 +419,22 @@ It is possible to load data directly from numpy arrays, however it is best pract
     	ex = tf.train.SequenceExample()
     	# Add non-sequential feature
     	seq_len = len(inputs)
+    	# could be a float_list, or a byte_list
     	ex.context.feature["length"].int64_list.value.append(sequence_length)
 
-    	# Add sequential feature
+    	# Add sequential feature 
+    	# All sequential features should be retrieve from the sequence_feature
+    	# of parse_single_sequence_example
     	fl_labels = ex.feature_lists.feature_list["labels"]
     	fl_tokens = ex.feature_lists.feature_list["inputs"]
     	for token, label in zip(inputs, labels):
+    		# same here could also be float_list or byte_list
     		fl_labels.feature.add().int64_list.value.append(label)
     		fl_tokens.feature.add().int64_list.value.append(token)
     	return ex
     ```
 
-2. Write all example into TFRecords  
+2. Write all example into TFRecords. You can split TfRecords into multiple files, by creating multiple tfRecordWriter.  
     ```
     import tempfile
     with tempfile.NamedTemporaryFile() as fp:
@@ -419,16 +445,28 @@ It is possible to load data directly from numpy arrays, however it is best pract
     	writer.close()
     	# check where file is writen with fp.name
     ```
-3. Retrieve file with TFRecordReader in an object named ```ex```.
-4. Define how to parse the data
+3. Create a Reader object, ```TFRecordReader``` for tfrecords file, or ```WholeFileReader``` for raw files such as jpg files. 
+4. Read a single example with:
+	```
+	writer_filename = "examples/val.tfrecords"
+	# note that writer_filename can also be a list of tfrecords filename,
+	# or a list of jpg file (use tensorflow internal functions)
+	filename_queue = tf.train.string_input_producer([writer_filename])
+	key, image_file = reader.read(filename_queue)
+	```
+
+6. Define how to parse the data
     ```python
     context_features = {
         "length": tf.FixedLenFeature([], dtype=tf.int64)
     }
 
     sequence_features = {
+    	# If the sequence length is fixed for every example
         "tokens": tf.FixedLenSequenceFeature([], dtype=tf.int64),
-        "labels": tf.FixedLenSequenceFeature([], dtype=tf.int64)
+        "labels": tf.FixedLenSequenceFeature([], dtype=tf.int64),
+    	# else use VarLeanFeature which will create SparseVector
+    	"sentences": tf.VarLenFeature(dtype=tf.float32)
     }
 
     context_parsed, sequence_parsed = tf.parse_single_sequence_example(
@@ -437,12 +475,40 @@ It is possible to load data directly from numpy arrays, however it is best pract
         sequence_features=sequence_features
     )
     ```
-5. Retrieve the data into array  
+7. Retrieve the data into array instantly
     ```python
 
     # get back in array format
     context = tf.contrib.learn.run_n(context_parsed, n=1, feed_dict=None)
     ```
+7. bis) Or retrieve the examples by their name. Example ```sentences = sequence_parsed["sentences"]```
+
+8. Use queues. There are three main type of Queues.
+
+### Queues
+#### Shuffle queues
+It shuffle elements
+```
+images = tf.train.shuffle_batch(
+    inputs, # all dimensions must be defined
+    batch_size=batch_size, # number of element to output
+    capacity=min_queue_examples + 3 * batch_size, # max capacity
+    min_after_dequeue=min_queue_examples) # capacity at any moment after a batch dequeue
+```
+
+#### Batch queues
+Same as shuffle queues without ```min_after_queues```. It is also possible to dynamically pad entries in the queues. Every varleanfeatures created which are now SparseVector will be padded to the maximum length between all elements in the same catagory and batch.
+```
+tf.train.batch(tensors=[review, score, film_id],
+                          batch_size=batch_size,
+                          dynamic_pad=True, # dynamically pad sparse tensor
+                          allow_smaller_final_batch=False, # disallow batch smaller than batch size
+						  capacity=capacity) 
+```  
+As of now, dynamic pad is not support with shuffle, but one may use a shuffle_batch as input tensors of a dynamically pad queue.
+
+#### Bucket queues
+Tricky and not well documented (does not seem to work with multiple different variable length features)
 
 # Computer vision application
 ## Convolution
@@ -671,6 +737,7 @@ Here is a non exhaustive list of usefull command:
 * Run a session for a number of step: run -t 10
 
 # Miscellanous
+* ```tf.squeeze(dens)``` Remove all dimension of length 1
 * ```tf.sign(var)``` return -1, 0, or 1 depending the var sign.
 * ```tf.reduce_max(3D_tensor, reduction_indices=2)``` return a 2D tensor, where only the max element in the 3dim is kept.
 * ```tf.unstack(value, axis=0)```: If given an array of shape (A, B, C, D), and an axis=2, it will return a list of |C| tensor of shape (A, B, D).
@@ -682,8 +749,13 @@ Here is a non exhaustive list of usefull command:
 * ```tf.variable_scope(name_or_scope, default_name)```: if name_or_scope is None, then scope.name is default_name.
 * ```tf.get_default_graph().get_operations()```: return all operations in the graph, operations can be filtered by scope then with the python function ```startwith```. It returns a list of tf.ops.Operation
 * ```tf.expand_dims([1, 2], axis=1)``` return a tensor where the axis dimensions is expanded. Here the new shape will be (2) -> (2, 1)
+* ``` tf.pad(image, [[16, 16], [16, 16], [0, 0]])```: pad a tensor. Here the tensor is a 3D tensor of shape (5, 4, 3) for example. Afterwards it will be of size (16 + 5 + 16, 16 + 4 + 16, 0 + 3 + 0), where zeros are add _upper_ and _after_ the current vector.
 * ```tf.groups(op_1, op_2, op_3)``` can be pass to sess.run and it will run all operations (but it will not return any output, only computed operations) 
 * ```tf.nn.sparse_softmax_cross_entropy_with_logits(labels, logits) expects labels to be int32 of size (batchsize), where every element is an integer from 0 to nbclasses. logits should be a float32 vector of size (batchsize, nbclasses) with values in it are not probabilities (logit form, before softmax)
+* ```tf.cond(pred, fn1, fn2)```: Given a condition, fn1 or fn2 (a callable) is return. Here is an example to return a rgb image if it isn't already one: 
+	```
+	image = tf.cond(pred=tf.equal(tf.shape(image)[2], 3), fn2=lambda: tf.image.grayscale_to_rgb(image), fn1=lambda: image)
+	```
 * FLAGS is an internal mecanism that allowed the same functionnality as argparse
 * ```clip_discriminator_var_op = [var.assign(tf.clip_by_value(var, clip_value_min, clip_value_max)) for
                                          var in list_tf_variables]``` create an operator to run in a sess that will clip values.

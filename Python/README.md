@@ -239,3 +239,11 @@ function.argtyptes[doublecpp, ctypes.c_int, ctypes.c_int]
 # call the function
 function(np.ones((3, 3)), 3, 3)
 ```
+
+# Virtual environnment
+* Create a virtual environment with the command ```virtualenv environment_name```. By default, all packages already installed are available when you create an environment. But you can start with a clean enviornement ```--no-site-packages```.
+* Choose the python interpreter ```virtualenv -p /usr/bin/python2.7 environment_name```
+* Activate the virtual environment with ```source environment_name/bin/activate```. When the package is activated, everything installed with pip is installed in the environment.
+* To leave the environement, use the command ```deactivate```
+* To erase the environment, just erase the folder
+* In order to keep your environment consistent, it’s a good idea to “freeze” the current state of the environment packages. To do this, run ```pip freeze > requirements.txt```
