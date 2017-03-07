@@ -207,16 +207,23 @@ if __name__ == '__main__':
 # Checkpoint
 ### Save and Restore
 ```
-sess.run(tf.global_variables_initializer())
-saver = tf.train.Saver(max_to_keep=5) # max number of checkpoint to save
-last_saved_model = tf.train.latest_checkpoint('./')
-# Restore
-if last_saved_model is not None:
-    saver.restore(sess, last_saved_model)
+saver = tf.train.Saver(max_to_keep=5)
 
-# Save during the training session
-if itr % 100 == 0:
-    saver.save(sess, global_step=itr, save_path="model")
+# Try to restore an old model
+last_saved_model = tf.train.latest_checkpoint("model/")
+
+group_init_ops = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
+
+self._sess.run(group_init_ops)
+
+summary_writer = tf.summary.FileWriter('logs/',
+	graph=self._sess.graph,
+    flush_secs=20)
+
+if last_saved_model is not None:
+    saver.restore(self._sess, last_saved_model)
+else:
+	tf.train.global_step(self._sess, self.global_step)
 ```
 
 ### What are the files saved
