@@ -515,7 +515,7 @@ tf.train.batch(tensors=[review, score, film_id],
 As of now, dynamic pad is not support with shuffle, but one may use a shuffle_batch as input tensors of a dynamically pad queue.
 
 #### Bucket queues
-Tricky and not well documented (does not seem to work with multiple different variable length features)
+Tricky and not well documented (does not seem to work with multiple different variable length features). [Best documentation so far :'('](https://github.com/tensorflow/tensorflow/issues/5609)
 
 # Computer vision application
 ## Convolution
